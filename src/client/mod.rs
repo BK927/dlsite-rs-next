@@ -1,5 +1,7 @@
 use crate::cache::ResponseCache;
 use crate::error::{DlsiteError, Result};
+use crate::interface::query::Language;
+use crate::interface::site::Site;
 use crate::retry::RetryConfig;
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
@@ -8,7 +10,15 @@ use std::time::Duration;
 pub mod circle;
 pub mod product;
 pub mod product_api;
+pub mod ranking;
 pub mod search;
+
+#[cfg(feature = "cookie-store")]
+pub mod auth;
+#[cfg(feature = "cookie-store")]
+pub mod play;
+#[cfg(feature = "cookie-store")]
+pub mod user;
 
 /// API client for DLsite.
 #[derive(Clone, Debug)]
@@ -22,6 +32,8 @@ pub struct DlsiteClient {
     cache: ResponseCache,
     /// Retry configuration for automatic retries
     retry_config: RetryConfig,
+    /// Default locale used for locale-aware API calls
+    default_locale: Language,
 }
 
 impl Default for DlsiteClient {
@@ -38,6 +50,7 @@ pub struct DlsiteClientBuilder {
     cache_capacity: usize,
     cache_ttl: Duration,
     retry_config: RetryConfig,
+    default_locale: Language,
 }
 
 impl DlsiteClientBuilder {
@@ -50,7 +63,14 @@ impl DlsiteClientBuilder {
             cache_capacity: 100,
             cache_ttl: Duration::from_secs(3600),
             retry_config: RetryConfig::default(),
+            default_locale: Language::Jp,
         }
+    }
+
+    /// Set the default locale for locale-aware API calls
+    pub fn locale(mut self, locale: Language) -> Self {
+        self.default_locale = locale;
+        self
     }
 
     /// Set the maximum number of idle connections per host
@@ -78,14 +98,26 @@ impl DlsiteClientBuilder {
         self
     }
 
+    /// Set the target DLsite site. Overrides the base URL set in [`new`].
+    pub fn site(mut self, site: Site) -> Self {
+        self.base_url = site.base_url();
+        self
+    }
+
     /// Build the DlsiteClient
     pub fn build(self) -> DlsiteClient {
-        let client = reqwest::Client::builder()
+        #[allow(unused_mut)]
+        let mut builder = reqwest::Client::builder()
             .pool_max_idle_per_host(self.pool_max_idle_per_host)
             .timeout(self.timeout)
-            .user_agent("dlsite-rs/0.2.0")
-            .build()
-            .expect("Failed to build HTTP client");
+            .user_agent("dlsite-rs/0.2.0");
+
+        #[cfg(feature = "cookie-store")]
+        {
+            builder = builder.cookie_store(true);
+        }
+
+        let client = builder.build().expect("Failed to build HTTP client");
 
         DlsiteClient {
             client,
@@ -93,6 +125,7 @@ impl DlsiteClientBuilder {
             last_request_time: Arc::new(AtomicU64::new(0)),
             cache: ResponseCache::new(self.cache_capacity, self.cache_ttl),
             retry_config: self.retry_config,
+            default_locale: self.default_locale,
         }
     }
 }
@@ -112,6 +145,13 @@ impl DlsiteClient {
     /// - Retry: 3 attempts with exponential backoff
     pub fn new(base_url: &str) -> Self {
         DlsiteClientBuilder::new(base_url).build()
+    }
+
+    /// Create a new DLsite client targeting a specific [`Site`].
+    ///
+    /// Equivalent to `DlsiteClient::new(&site.base_url())`.
+    pub fn for_site(site: Site) -> Self {
+        DlsiteClientBuilder::new(&site.base_url()).build()
     }
 
     /// Create a builder for customizing the client configuration
@@ -167,6 +207,16 @@ impl DlsiteClient {
                             continue;
                         }
                         return Err(err);
+                    }
+                    if status == 401 {
+                        return Err(DlsiteError::AuthRequired(
+                            "HTTP 401 Unauthorized".to_string()
+                        ));
+                    }
+                    if status == 403 {
+                        return Err(DlsiteError::AuthRequired(
+                            "HTTP 403 Forbidden".to_string()
+                        ));
                     }
                     if !status.is_success() {
                         let err = DlsiteError::HttpStatus(status.as_u16());
@@ -228,6 +278,11 @@ impl DlsiteClient {
     pub fn retry_config(&self) -> &RetryConfig {
         &self.retry_config
     }
+
+    /// Get the default locale configured on this client
+    pub fn default_locale(&self) -> &Language {
+        &self.default_locale
+    }
 }
 
 /// These methods return a “sub-client”.
@@ -252,5 +307,36 @@ impl DlsiteClient {
     /// Get a client to search things. For more information, see [`search::SearchClient`].
     pub fn search(&self) -> search::SearchClient {
         search::SearchClient::new(self)
+    }
+
+    /// Get a client for ranking data. For more information, see [`ranking::RankingClient`].
+    ///
+    /// Note: ranking endpoints are not yet implemented — see `docs/dlsite_gap_analysis.md`.
+    pub fn ranking(&self) -> ranking::RankingClient {
+        ranking::RankingClient { c: self }
+    }
+
+    /// Get a client for authentication. Requires the `cookie-store` feature.
+    ///
+    /// Note: auth endpoints are not yet implemented — see `docs/dlsite_gap_analysis.md`.
+    #[cfg(feature = "cookie-store")]
+    pub fn auth(&self) -> auth::AuthClient {
+        auth::AuthClient { c: self }
+    }
+
+    /// Get a client for DLsite Play streaming. Requires the `cookie-store` feature.
+    ///
+    /// Note: Play endpoints are not yet implemented — see `docs/dlsite_gap_analysis.md`.
+    #[cfg(feature = "cookie-store")]
+    pub fn play(&self) -> play::PlayClient {
+        play::PlayClient { c: self }
+    }
+
+    /// Get a client for user library and purchase data. Requires the `cookie-store` feature.
+    ///
+    /// Note: user endpoints are not yet implemented — see `docs/dlsite_gap_analysis.md`.
+    #[cfg(feature = "cookie-store")]
+    pub fn user(&self) -> user::UserClient {
+        user::UserClient { c: self }
     }
 }

@@ -53,6 +53,11 @@ impl RetryConfig {
             DlsiteError::RateLimit(_) => true,
             // HTTP 5xx errors are retryable
             DlsiteError::HttpStatus(code) => *code >= 500,
+            // Auth errors are never retryable -- user intervention required
+            DlsiteError::AuthRequired(_) => false,
+            DlsiteError::SessionExpired(_) => false,
+            // Schema drift is never retryable -- library must be updated
+            DlsiteError::SchemaDrift(_) => false,
             // Other errors are not retryable
             _ => false,
         }

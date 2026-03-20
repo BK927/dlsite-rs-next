@@ -7,6 +7,7 @@ use crate::{
     interface::{
         genre::Genre,
         product::{AgeCategory, WorkType},
+        query::Language,
     },
     utils::ToParseError as _,
     DlsiteClient, DlsiteError,
@@ -169,6 +170,8 @@ impl<'a> ProductClient<'a> {
 
     /// Get product reviews and related informations using 'review api'.
     ///
+    /// Uses Japanese locale (`ja_JP`). For other locales, use [`get_review_with_locale`].
+    ///
     /// # Arguments
     /// * `product_id` - Product ID.
     /// * `limit` - Number of reviews to get.
@@ -187,14 +190,40 @@ impl<'a> ProductClient<'a> {
         mix_pickup: bool,
         order: review::ReviewSortOrder,
     ) -> Result<review::ProductReview> {
+        self.get_review_with_locale(product_id, limit, page, mix_pickup, order, Language::Jp)
+            .await
+    }
+
+    /// Get product reviews with an explicit locale.
+    ///
+    /// # Arguments
+    /// * `product_id` - Product ID.
+    /// * `limit` - Number of reviews to get.
+    /// * `page` - Page number.
+    /// * `mix_pickup` - Mixes picked up review. To get user genre, this must be true.
+    /// * `order` - Sort order of reviews.
+    /// * `locale` - Locale for the review response language.
+    ///
+    /// # Returns
+    /// Product reviews and related informations.
+    #[tracing::instrument(err, skip_all)]
+    pub async fn get_review_with_locale(
+        &self,
+        product_id: &str,
+        limit: u32,
+        page: u32,
+        mix_pickup: bool,
+        order: review::ReviewSortOrder,
+        locale: Language,
+    ) -> Result<review::ProductReview> {
         let order_str = match order {
             review::ReviewSortOrder::New => "regist_d",
             review::ReviewSortOrder::Top => "top",
         };
 
         let path = format!(
-            "/api/review?product_id={}&limit={}&mix_pickup={}&page={}&order={}&locale=ja_JP",
-            product_id, limit, mix_pickup, page, order_str
+            "/api/review?product_id={}&limit={}&mix_pickup={}&page={}&order={}&locale={}",
+            product_id, limit, mix_pickup, page, order_str, locale.to_review_locale()
         );
         let json_str = self.c.get(&path).await?;
         let json: serde_json::Value = serde_json::from_str(&json_str)?;

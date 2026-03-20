@@ -2,6 +2,82 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-03-20
+
+### Added
+
+#### Error Taxonomy
+- `DlsiteError` is now `#[non_exhaustive]`
+- New variants: `AuthRequired(String)`, `SessionExpired(String)`, `SchemaDrift(String)`
+- HTTP 401/403 responses now map to `AuthRequired` instead of `HttpStatus`
+- New variants explicitly marked non-retryable in `RetryConfig::is_retryable`
+
+#### Search Parameter Expansion
+- Added missing search parameters: `regist_date_start`, `genre_name`, `options_name`, `work_type_category_name`, `show_type`, `from`, `dlsite_only`, `price_category`
+
+#### Locale Support
+- `Language` enum now has 5 variants: `Jp` (default), `En`, `Ko`, `ZhCn`, `ZhTw`
+- `Language::to_review_locale()` returns the BCP-47 locale string for the review API
+- `ProductClient::get_review_with_locale()` — review fetch with explicit locale
+- `ProductApiClient::get_with_locale()` — product API fetch with explicit locale
+- `DlsiteClient` and `DlsiteClientBuilder` now carry a `default_locale` field
+- Builder `.locale(Language)` method; accessor `DlsiteClient::default_locale()`
+
+#### Site Abstraction
+- New `Site` enum: `Home`, `Maniax`, `Books`, `Soft`, `Pro`, `Appx`, `Comic`, `Custom(String)`
+- `Site::base_url()` returns the full base URL for the site
+- `DlsiteClient::for_site(site: Site)` constructor
+- `DlsiteClientBuilder::site(Site)` builder method
+
+#### Circle Profile
+- New `CircleProfile` struct: `id`, `name`, `description`, `banner_url`
+- `CircleClient::get_circle_profile(circle_id)` scrapes profile metadata from the circle page
+
+#### Ranking Placeholder
+- New `ranking` module with `RankingClient` stub
+- `DlsiteClient::ranking()` accessor
+- Documented in `docs/dlsite_gap_analysis.md` as needing network capture before implementation
+
+#### Auth/Session Stubs (feature-gated)
+- New `cookie-store` Cargo feature enabling `reqwest/cookies`
+- `auth::AuthClient`, `play::PlayClient`, `user::UserClient` stubs behind `cookie-store`
+- `DlsiteClient::auth()`, `play()`, `user()` accessors (feature-gated)
+
+#### Documentation
+- `docs/dlsite_endpoint_inventory.md` — full endpoint coverage matrix
+- `docs/dlsite_gap_analysis.md` — gap analysis and bug inventory
+
+### Fixed
+
+- **Typo**: `campagin` field renamed to `campaign` in `SearchProductQuery`; path generation fixed to emit `/campaign/campaign` (not `/campaign/1`)
+- **Duplicate `per_page`**: `CircleQuery::to_path()` was emitting `per_page` twice — removed duplicate
+- **Hardcoded locale**: `get_review` no longer hardcodes `locale=ja_JP`; delegates to `get_review_with_locale`
+- **Stale GitHub URL**: `ozonezone/dlsite-rs` → `SuperToolman/dlsite-gamebox` in `product_api/mod.rs`
+- **Dead README link**: Removed broken link to `QUERY_PERFORMANCE_OPTIMIZATION.md`
+
+### Migration Guide
+
+All existing call sites continue to work unchanged.
+
+```rust
+// campaign field rename (breaking for anyone who set it)
+// Before:
+SearchProductQuery { campagin: Some(true), ..Default::default() }
+// After:
+SearchProductQuery { campaign: Some(true), ..Default::default() }
+
+// New: explicit locale on review fetch
+client.product().get_review_with_locale("RJ123456", 6, 1, true, ReviewSortOrder::New, Language::En).await?;
+
+// New: site-based constructor
+let client = DlsiteClient::for_site(Site::Books);
+
+// New: locale on builder
+let client = DlsiteClient::builder("https://www.dlsite.com/maniax")
+    .locale(Language::En)
+    .build();
+```
+
 ## [0.2.0] - 2025-10-29
 
 ### Added

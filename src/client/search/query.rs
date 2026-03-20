@@ -10,6 +10,7 @@ use crate::interface::query::*;
 // /sex_category%5B0%5D/male
 // /keyword/a
 // /regist_date_end/2022-08-25
+// /regist_date_start/2022-01-01
 // /price_low/801
 // /price_high/1000
 // /ana_flg/on
@@ -46,6 +47,7 @@ pub struct SearchProductQuery {
     pub sex_category: Option<Vec<SexCategory>>,
     pub keyword: Option<String>,
     pub regist_date_end: Option<String>,
+    pub regist_date_start: Option<String>,
     pub price_low: Option<u32>,
     pub price_high: Option<u32>,
     /// Sales status
@@ -55,21 +57,28 @@ pub struct SearchProductQuery {
     pub order: Option<Order>,
     pub work_type: Option<Vec<WorkType>>,
     pub work_type_category: Option<Vec<WorkTypeCategory>>,
+    pub work_type_category_name: Option<Vec<String>>,
     pub genre: Option<Vec<u32>>,
+    pub genre_name: Option<Vec<String>>,
     pub options_and_or: Option<OptionAndOr>,
     pub options: Option<Vec<String>>,
     pub options_not: Option<Vec<String>>,
+    pub options_name: Option<Vec<String>>,
     pub file_type: Option<Vec<FileType>>,
     pub rate_average: Option<u32>,
     /// 30, 50 or 100
     pub per_page: Option<u32>,
     pub page: Option<u32>,
-    pub campagin: Option<bool>,
+    pub campaign: Option<bool>,
     /// Whether the sales end date is in 24 hours
     pub soon: Option<bool>,
+    pub dlsite_only: Option<bool>,
     pub is_pointup: Option<bool>,
     pub is_free: Option<bool>,
     pub release_term: Option<ReleaseTerm>,
+    pub price_category: Option<u32>,
+    pub show_type: Option<u32>,
+    pub from: Option<String>,
 }
 
 impl SearchProductQuery {
@@ -82,6 +91,7 @@ impl SearchProductQuery {
         push_option_array!(path, self, sex_category);
         push_option!(path, self, keyword);
         push_option!(path, self, regist_date_end);
+        push_option!(path, self, regist_date_start);
         push_option!(path, self, price_low);
         push_option!(path, self, price_high);
         push_option!(path, self, ana_flg);
@@ -90,19 +100,28 @@ impl SearchProductQuery {
         push_option!(path, self, order);
         push_option_array!(path, self, work_type);
         push_option_array!(path, self, work_type_category);
+        push_option_array!(path, self, work_type_category_name);
         push_option_array!(path, self, genre);
+        push_option_array!(path, self, genre_name);
         push_option!(path, self, options_and_or);
         push_option_array!(path, self, options);
         push_option_array!(path, self, options_not);
+        push_option_array!(path, self, options_name);
         push_option_array!(path, self, file_type);
         push_option!(path, self, rate_average);
         push_option!(path, self, per_page);
         push_option!(path, self, page);
-        push_option_bool!(path, self, campagin);
+        if let Some(true) = &self.campaign {
+            path.push_str("/campaign/campaign");
+        }
         push_option_bool!(path, self, soon);
+        push_option_bool!(path, self, dlsite_only);
         push_option_bool!(path, self, is_pointup);
         push_option_bool!(path, self, is_free);
         push_option!(path, self, release_term);
+        push_option!(path, self, price_category);
+        push_option!(path, self, show_type);
+        push_option!(path, self, from);
 
         path
     }
@@ -112,7 +131,7 @@ impl SearchProductQuery {
 mod tests {
     use crate::{
         client::search::SearchProductQuery,
-        interface::{product::FileType, query::SexCategory},
+        interface::{product::FileType, query::{Language, SexCategory}},
     };
 
     #[test]
@@ -122,6 +141,7 @@ mod tests {
             SearchProductQuery::default().to_path()
         );
     }
+
     #[test]
     fn product_search_param_1() {
         assert_eq!(
@@ -136,5 +156,135 @@ mod tests {
             }
             .to_path()
         );
+    }
+
+    #[test]
+    fn campaign_true_produces_path_segment() {
+        let path = SearchProductQuery {
+            campaign: Some(true),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(path.contains("/campaign/campaign"), "expected /campaign/campaign in {path}");
+    }
+
+    #[test]
+    fn campaign_false_omits_path_segment() {
+        let path = SearchProductQuery {
+            campaign: Some(false),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(!path.contains("campaign"), "expected no campaign segment in {path}");
+    }
+
+    #[test]
+    fn campaign_none_omits_path_segment() {
+        let path = SearchProductQuery {
+            campaign: None,
+            ..Default::default()
+        }
+        .to_path();
+        assert!(!path.contains("campaign"), "expected no campaign segment in {path}");
+    }
+
+    #[test]
+    fn regist_date_start_in_path() {
+        let path = SearchProductQuery {
+            regist_date_start: Some("2022-01-01".to_string()),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(path.contains("/regist_date_start/2022-01-01"), "got: {path}");
+    }
+
+    #[test]
+    fn genre_name_array_in_path() {
+        let path = SearchProductQuery {
+            genre_name: Some(vec!["ASMR".to_string()]),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(path.contains("/genre_name[0]/ASMR"), "got: {path}");
+    }
+
+    #[test]
+    fn options_name_array_in_path() {
+        let path = SearchProductQuery {
+            options_name: Some(vec!["日本語作品".to_string()]),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(path.contains("/options_name[0]/日本語作品"), "got: {path}");
+    }
+
+    #[test]
+    fn work_type_category_name_array_in_path() {
+        let path = SearchProductQuery {
+            work_type_category_name: Some(vec!["ボイス・ASMR".to_string()]),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(path.contains("/work_type_category_name[0]/ボイス・ASMR"), "got: {path}");
+    }
+
+    #[test]
+    fn show_type_in_path() {
+        let path = SearchProductQuery {
+            show_type: Some(1),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(path.contains("/show_type/1"), "got: {path}");
+    }
+
+    #[test]
+    fn from_in_path() {
+        let path = SearchProductQuery {
+            from: Some("fs.detail".to_string()),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(path.contains("/from/fs.detail"), "got: {path}");
+    }
+
+    #[test]
+    fn dlsite_only_true_in_path() {
+        let path = SearchProductQuery {
+            dlsite_only: Some(true),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(path.contains("/dlsite_only/1"), "got: {path}");
+    }
+
+    #[test]
+    fn dlsite_only_false_omitted() {
+        let path = SearchProductQuery {
+            dlsite_only: Some(false),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(!path.contains("dlsite_only"), "got: {path}");
+    }
+
+    #[test]
+    fn price_category_in_path() {
+        let path = SearchProductQuery {
+            price_category: Some(4),
+            ..Default::default()
+        }
+        .to_path();
+        assert!(path.contains("/price_category/4"), "got: {path}");
+    }
+
+    #[test]
+    fn language_en_produces_en_segment() {
+        let path = SearchProductQuery {
+            language: Language::En,
+            ..Default::default()
+        }
+        .to_path();
+        assert_eq!("/fsr/ajax/=/language/en", path);
     }
 }

@@ -47,6 +47,8 @@ default = ["unknown-field-log", "reqwest-default-tls"]
 unknown-field-log = ["dep:serde_ignored"]
 ## Fails when unknown fields are found in response.
 unknown-field-error = []
+## Enables cookie store support for session-based auth (reqwest/cookies).
+cookie-store = ["reqwest/cookies"]
 
 #! ### Reqwest features
 ## Enables native-tls feature of reqwest.

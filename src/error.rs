@@ -1,6 +1,7 @@
 use thiserror::Error;
 
 /// Errors that can occur while using the Dlsite API
+#[non_exhaustive]
 #[derive(Debug, Error)]
 pub enum DlsiteError {
     /// HTTP request error
@@ -30,6 +31,18 @@ pub enum DlsiteError {
     /// Server-side error
     #[error("Server error: {0}")]
     Server(String),
+
+    /// Authentication is required to access this resource (HTTP 401/403)
+    #[error("Authentication required: {0}")]
+    AuthRequired(String),
+
+    /// Session has expired and the user must re-authenticate
+    #[error("Session expired: {0}")]
+    SessionExpired(String),
+
+    /// The API response shape has drifted from the expected schema
+    #[error("Schema drift: {0}")]
+    SchemaDrift(String),
 }
 
 pub(crate) type Result<T> = std::result::Result<T, DlsiteError>;

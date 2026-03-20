@@ -12,6 +12,15 @@ use crate::{error::Result, utils::ToParseError as _};
 
 pub use self::query::CircleQuery;
 
+/// Basic profile metadata for a DLsite circle (maker).
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct CircleProfile {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub banner_url: Option<String>,
+}
+
 /// Client to get circle-related content from DLsite.
 #[derive(Clone, Debug)]
 pub struct CircleClient<'a> {
@@ -19,6 +28,48 @@ pub struct CircleClient<'a> {
 }
 
 impl<'a> CircleClient<'a> {
+    /// Fetch basic profile metadata for a circle by scraping the circle's HTML page.
+    ///
+    /// This reuses the same HTTP request as [`get_circle`] (the response is cached),
+    /// so calling both methods for the same circle is inexpensive.
+    ///
+    /// # Arguments
+    /// * `circle_id` - The circle/maker ID. Example: `RG24350`.
+    ///
+    /// # Returns
+    /// [`CircleProfile`] with `id`, `name`, `description`, and `banner_url`.
+    /// `description` and `banner_url` are `None` if not found on the page.
+    pub async fn get_circle_profile(&self, circle_id: &str) -> Result<CircleProfile> {
+        // Uses the default CircleQuery path so the response is shared with get_circle calls
+        let query_path = CircleQuery::default().to_path(circle_id);
+        let html_str = self.c.get(&query_path).await?;
+        let html = Html::parse_fragment(&html_str);
+
+        let name = html
+            .select(&Selector::parse(".maker_name").unwrap())
+            .next()
+            .and_then(|e| e.text().next().map(|t| t.trim().to_string()))
+            .unwrap_or_else(|| circle_id.to_string());
+
+        let description = html
+            .select(&Selector::parse(".maker_introduction").unwrap())
+            .next()
+            .map(|e| e.text().collect::<Vec<_>>().join("").trim().to_string())
+            .filter(|s| !s.is_empty());
+
+        let banner_url = html
+            .select(&Selector::parse(".maker_header img").unwrap())
+            .next()
+            .and_then(|e| e.value().attr("src").map(|s| s.to_string()));
+
+        Ok(CircleProfile {
+            id: circle_id.to_string(),
+            name,
+            description,
+            banner_url,
+        })
+    }
+
     /// Search circle-related products.
     pub async fn get_circle(&self, circle_id: &str, options: &CircleQuery) -> Result<SearchResult> {
         let query_path = options.to_path(circle_id);

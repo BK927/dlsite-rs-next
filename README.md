@@ -17,7 +17,7 @@ The library includes several performance optimizations that provide significant 
 | Selector Caching | 5-10% | All queries |
 | **Combined** | **10-100x** | **Typical usage** |
 
-See [QUERY_PERFORMANCE_OPTIMIZATION.md](QUERY_PERFORMANCE_OPTIMIZATION.md) for detailed performance analysis.
+See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 
 ## NOTE
 
@@ -32,16 +32,18 @@ See [QUERY_PERFORMANCE_OPTIMIZATION.md](QUERY_PERFORMANCE_OPTIMIZATION.md) for d
 - [ ] Get product information by scraping html and using ajax api for web.
   - [x] Basic information
   - [ ] Additional information
-  - [ ] Multi-language support (Currently, this crate uses Japanese page to
-        parse html)
-- [x] Get product review
-- [x] Get product information using api.
-- [x] Search product
+  - [x] Multi-language support via `Language` enum (`Jp`, `En`, `Ko`, `ZhCn`, `ZhTw`)
+        (HTML scraping still uses Japanese page; locale applies to review and API calls)
+- [x] Get product review (with locale support via `get_review_with_locale`)
+- [x] Get product information using api (with locale support via `get_with_locale`)
+- [x] Search product (all documented parameters now implemented)
+- [x] Site abstraction via `Site` enum (`Maniax`, `Books`, `Soft`, `Pro`, `Appx`, `Comic`, `Home`, `Custom`)
 - [ ] Get circle info
   - [x] Get circle product list
-  - [ ] Get circle sale list
-- [ ] Login and user related feature
-- [ ] Get ranking
+  - [x] Get circle profile metadata (`get_circle_profile`)
+  - [ ] Get circle sale list (needs network capture)
+- [ ] Login and user related feature (stubs behind `cookie-store` feature)
+- [ ] Get ranking (stub — endpoint URL needs network capture verification)
 
 ## Features
 

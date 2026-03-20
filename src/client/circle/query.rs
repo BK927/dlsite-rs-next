@@ -18,7 +18,6 @@ impl CircleQuery {
 
         push_option_array!(path, self, options);
         push_option!(path, self, per_page);
-        push_option!(path, self, per_page);
         // TODO: Investigate this
         path.push_str("/show_type/3/hd/1/without_order/1");
         push_option!(path, self, page);
@@ -63,5 +62,16 @@ mod tests {
             }
             .to_path("RG24350")
         );
+    }
+
+    #[test]
+    fn per_page_appears_exactly_once() {
+        let path = CircleQuery {
+            per_page: Some(30),
+            ..Default::default()
+        }
+        .to_path("RG24350");
+        let count = path.matches("/per_page/").count();
+        assert_eq!(1, count, "per_page should appear exactly once, got: {path}");
     }
 }

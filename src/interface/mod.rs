@@ -2,6 +2,7 @@
 
 pub mod product;
 pub mod query;
+pub mod site;
 pub mod genre {
     //! Interfaces related to genre.
 

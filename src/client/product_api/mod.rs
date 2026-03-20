@@ -4,7 +4,7 @@ pub mod interface;
 #[cfg(test)]
 mod test;
 
-use crate::{error::Result, DlsiteClient, DlsiteError};
+use crate::{error::Result, interface::query::Language, DlsiteClient, DlsiteError};
 
 use self::interface::ProductApiContent;
 
@@ -18,6 +18,8 @@ pub struct ProductApiClient<'a> {
 
 impl<'a> ProductApiClient<'a> {
     /// Get product detail using api.
+    ///
+    /// Uses the client's default locale. For an explicit locale, use [`get_with_locale`].
     ///
     /// # Arguments
     /// * `id` - Product ID.
@@ -40,16 +42,32 @@ impl<'a> ProductApiClient<'a> {
     /// }
     /// ```
     pub async fn get(&self, id: &str) -> Result<ProductApiContent> {
+        self.get_with_locale(id, self.c.default_locale().clone()).await
+    }
+
+    /// Get product detail using api with an explicit locale.
+    ///
+    /// # Arguments
+    /// * `id` - Product ID.
+    /// * `locale` - Locale to use for the response language.
+    ///
+    /// # Returns
+    /// * [`ProductApiContent`] - Product details.
+    pub async fn get_with_locale(&self, id: &str, locale: Language) -> Result<ProductApiContent> {
         let json = self
             .c
-            .get(&format!("/api/=/product.json?workno={}", id))
+            .get(&format!(
+                "/api/=/product.json?workno={}&locale={}",
+                id,
+                locale.to_review_locale()
+            ))
             .await?;
         let jd = &mut serde_json::Deserializer::from_str(&json);
         #[cfg(feature = "unknown-field-log")]
         let result: std::result::Result<Vec<ProductApiContent>, _> = serde_ignored::deserialize(
             jd,
             |path| {
-                tracing::error!("Ignored path: '{}' for '{id}'. Please report this to https://github.com/ozonezone/dlsite-rs", path.to_string());
+                tracing::error!("Ignored path: '{}' for '{id}'. Please report this to https://github.com/SuperToolman/dlsite-gamebox", path.to_string());
             },
         );
         #[cfg(not(feature = "unknown-field-log"))]
