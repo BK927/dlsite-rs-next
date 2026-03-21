@@ -13,7 +13,6 @@ categories = ["api-bindings"]
 tokio = { version = "1", features = ["macros"] }
 chrono = { version = "0.4.39", features = ["serde"] }
 reqwest = { version = "0.12.9" }
-scraper = "0.23.1"
 
 serde = "1.0.216"
 serde-aux = "4.5.0"
@@ -26,12 +25,14 @@ serde_ignored = { version = "0.1.10", optional = true }
 thiserror = "2.0.9"
 strum = { version = "0.27.1", features = ["derive"] }
 url = "2.3.1"
-regex = "1.11.1"
 tracing = "0.1"
 document-features = { version = "0.2.11", optional = true }
 lru = "0.16.2"
-rayon = "1.11.0"
 futures = "0.3.31"
+
+# Optional dependencies (enabled by features)
+scraper = { version = "0.23.1", optional = true }
+rayon = { version = "1.11.0", optional = true }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
@@ -39,6 +40,8 @@ anyhow = { version = "1", features = ["backtrace", "std"] }
 tracing-subscriber = "0.3"
 rand = "0.9"
 test-case = "3.1.0"
+wiremock = "0.6"
+insta = { version = "1.42", features = ["json"] }
 
 [features]
 default = ["unknown-field-log", "reqwest-default-tls"]
@@ -49,6 +52,10 @@ unknown-field-log = ["dep:serde_ignored"]
 unknown-field-error = []
 ## Enables cookie store support for session-based auth (reqwest/cookies).
 cookie-store = ["reqwest/cookies"]
+
+## Enables search and circle functionality with HTML parsing.
+## This adds scraper and rayon dependencies.
+search-html = ["dep:scraper", "dep:rayon"]
 
 #! ### Reqwest features
 ## Enables native-tls feature of reqwest.

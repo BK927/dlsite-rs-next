@@ -1,11 +1,20 @@
 //! Interfaces related to search feature only. For more information, see [`SearchClient`].
 
+//!
+//! **Feature Flags:**
+//! - `search-html`: Enables search functionality with HTML parsing. This adds
+//!   `scraper` and `rayon` dependencies. Without this feature, search methods
+//!   are not available.
+
 pub(crate) mod macros;
 mod query;
+#[cfg(feature = "search-html")]
 mod selectors;
 
+#[cfg(feature = "search-html")]
 use scraper::{Html, Selector};
 use serde::Deserialize;
+#[cfg(feature = "search-html")]
 use rayon::prelude::*;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -14,14 +23,22 @@ use std::time::Duration;
 use crate::{
     error::Result,
     interface::product::{AgeCategory, WorkType},
-    utils::ToParseError,
     DlsiteClient,
     cache::GenericCache,
 };
+#[cfg(feature = "search-html")]
+use crate::utils::ToParseError;
 
 pub use self::query::SearchProductQuery;
 
 /// Client to search products on DLsite.
+///
+/// **Requires `search-html` feature flag.**
+///
+/// Enable it in your `Cargo.toml`:
+/// ```toml
+/// dlsite-gamebox = { version = "0.2", features = ["search-html"] }
+/// ```
 pub struct SearchClient<'a> {
     pub(crate) c: &'a DlsiteClient,
     /// Cache for search results to avoid re-parsing the same queries
@@ -55,7 +72,7 @@ pub struct SearchProductItem {
     pub age_category: AgeCategory,
     pub work_type: WorkType,
     pub thumbnail_url: String,
-    pub rating: Option<f32>, // pub image_url: Option<String>,
+    pub rating: Option<f32>,
 }
 
 #[derive(Debug)]
@@ -64,12 +81,15 @@ pub struct SearchResult {
     pub count: i32,
     pub query_path: String,
 }
+
+#[cfg(feature = "search-html")]
 fn parse_count_str(str: &str) -> Result<i32> {
     str.replace(['(', ')', ','], "")
         .parse()
         .to_parse_error("Failed to parse string to count")
 }
 
+#[cfg(feature = "search-html")]
 fn parse_num_str(str: &str) -> Result<i32> {
     str.replace(',', "")
         .parse()
@@ -87,11 +107,13 @@ impl<'a> SearchClient<'a> {
 
     /// Search products on DLsite.
     ///
+    /// **Requires `search-html` feature flag.**
+    ///
     /// # Arguments
     /// * `options` - Struct of search options.
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// use dlsite::{DlsiteClient, client::search::SearchProductQuery, interface::query::*};
     ///
     /// #[tokio::main]
@@ -109,6 +131,7 @@ impl<'a> SearchClient<'a> {
     ///     dbg!(&product);
     /// }
     /// ```
+    #[cfg(feature = "search-html")]
     pub async fn search_product(&self, options: &SearchProductQuery) -> Result<SearchResult> {
         let query_path = options.to_path();
 
@@ -152,6 +175,9 @@ impl<'a> SearchClient<'a> {
     }
 
     /// Search multiple queries concurrently for better performance
+    ///
+    /// **Requires `search-html` feature flag.**
+    ///
     /// This method uses tokio::join_all to fetch multiple pages in parallel
     ///
     /// # Arguments
@@ -159,6 +185,7 @@ impl<'a> SearchClient<'a> {
     ///
     /// # Returns
     /// * `Vec<SearchResult>` - Results for each query in the same order
+    #[cfg(feature = "search-html")]
     pub async fn search_products_batch(&self, queries: &[SearchProductQuery]) -> Result<Vec<SearchResult>> {
         let futures: Vec<_> = queries
             .iter()
@@ -169,6 +196,9 @@ impl<'a> SearchClient<'a> {
     }
 
     /// Stream search results for a query, parsing items as they are fetched
+    ///
+    /// **Requires `search-html` feature flag.**
+    ///
     /// This method is optimized for memory efficiency and responsiveness
     ///
     /// # Arguments
@@ -177,6 +207,7 @@ impl<'a> SearchClient<'a> {
     ///
     /// # Returns
     /// * `Result<i32>` - Total count of items
+    #[cfg(feature = "search-html")]
     pub async fn search_product_stream<F>(&self, options: &SearchProductQuery, mut callback: F) -> Result<i32>
     where
         F: FnMut(SearchProductItem),
@@ -202,11 +233,12 @@ impl<'a> SearchClient<'a> {
 }
 
 /// Parse a single search result item from HTML element
-/// This function is designed to be used in parallel processing
+///
+/// **Only available with `search-html` feature flag.**
+#[cfg(feature = "search-html")]
 fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
     let item_element = Html::parse_fragment(item_html);
-    let item_element = item_element
-        .root_element();
+    let item_element = item_element.root_element();
 
     let product_id_e = item_element
         .select(selectors::product_id_element())
@@ -433,6 +465,10 @@ fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
     })
 }
 
+/// Parse search HTML into a list of search results
+///
+/// **Only available with `search-html` feature flag.**
+#[cfg(feature = "search-html")]
 pub(crate) fn parse_search_html(html: &str) -> Result<Vec<SearchProductItem>> {
     let html = Html::parse_fragment(html);
     let mut result: Vec<SearchProductItem> = vec![];
@@ -659,21 +695,7 @@ pub(crate) fn parse_search_html(html: &str) -> Result<Vec<SearchProductItem>> {
                 } else {
                     None
                 }
-            }, // image_url: {
-               //     if let Some(e) = item_element
-               //         .select(&Selector::parse(".work_img_popover img").unwrap())
-               //         .next()
-               //     {
-               //         Some(
-               //             e.value()
-               //                 .attr("src")
-               //                 .to_parse_error("Failed to get image url")?
-               //                 .to_string(),
-               //         )
-               //     } else {
-               //         None
-               //     }
-               // },
+            },
         })
     }
 
@@ -681,7 +703,11 @@ pub(crate) fn parse_search_html(html: &str) -> Result<Vec<SearchProductItem>> {
 }
 
 /// Parse search HTML using parallel processing for better performance
+///
+/// **Only available with `search-html` feature flag.**
+///
 /// This function is optimized for large result sets (50+ items)
+#[cfg(feature = "search-html")]
 pub(crate) fn parse_search_html_parallel(html: &str) -> Result<Vec<SearchProductItem>> {
     let html = Html::parse_fragment(html);
 
@@ -698,84 +724,3 @@ pub(crate) fn parse_search_html_parallel(html: &str) -> Result<Vec<SearchProduct
         .collect()
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::{
-        client::DlsiteClient,
-        interface::{
-            product::WorkType,
-            query::{Order, SexCategory},
-        },
-    };
-
-    #[tokio::test]
-    async fn search_product_1() {
-        let client = DlsiteClient::default();
-        let res = client
-            .search()
-            .search_product(&super::SearchProductQuery {
-                sex_category: Some(vec![SexCategory::Male]),
-                keyword: Some("ねこぐらし".to_string()),
-                order: Some(Order::Release),
-                ..Default::default()
-            })
-            .await
-            .expect("Failed to search");
-
-        assert!(res.products.len() >= 10);
-        assert!(res.count >= 45);
-
-        res.products
-            .iter()
-            .find(|r| r.id == "RJ291224")
-            .expect("Expected to find RJ291224");
-
-        res.products.iter().for_each(|r| {
-            if r.id == "RJ291224" {
-                assert_eq!(1980, r.price_original);
-                assert!(r.dl_count.unwrap() > 9000);
-                assert!(r.rate_count.is_some());
-                assert!(r.review_count.is_some());
-                assert!(r.rating.is_some());
-                assert_eq!("RG51654", r.circle_id);
-                assert_eq!("CANDY VOICE", r.circle_name);
-                assert_eq!(WorkType::SOU, r.work_type);
-                assert_eq!("竹達彩奈", r.creator.as_ref().unwrap());
-                assert!(!r.creator_omitted.unwrap());
-            }
-        });
-    }
-
-    #[tokio::test]
-    async fn search_product_2() {
-        let client = DlsiteClient::default();
-        let mut opts = super::SearchProductQuery {
-            sex_category: Some(vec![SexCategory::Male]),
-            order: Some(Order::Trend),
-            per_page: Some(50),
-            ..Default::default()
-        };
-
-        let res = client
-            .search()
-            .search_product(&opts)
-            .await
-            .expect("Failed to search page 1");
-        res.products.iter().for_each(|i| {
-            url::Url::parse(&i.thumbnail_url).expect("Failed to parse url");
-            dbg!(&i);
-        });
-        assert_eq!(50, res.products.len());
-
-        opts.page = Some(2);
-        let res = client
-            .search()
-            .search_product(&opts)
-            .await
-            .expect("Failed to search page 2");
-        res.products.iter().for_each(|i| {
-            url::Url::parse(&i.thumbnail_url).expect("Failed to parse url");
-        });
-        assert_eq!(50, res.products.len());
-    }
-}

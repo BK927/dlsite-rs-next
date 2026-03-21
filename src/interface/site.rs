@@ -35,7 +35,7 @@ impl Site {
     ///
     /// # Examples
     /// ```
-    /// use dlsite::interface::site::Site;
+    /// use dlsite_gamebox::interface::site::Site;
     /// assert_eq!(Site::Maniax.base_url(), "https://www.dlsite.com/maniax");
     /// assert_eq!(Site::Books.base_url(), "https://www.dlsite.com/books");
     /// ```

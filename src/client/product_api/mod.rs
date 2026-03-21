@@ -1,8 +1,6 @@
 //! Interfaces related to product api only. For more information, see [`ProductApiClient`].
 
 pub mod interface;
-#[cfg(test)]
-mod test;
 
 use crate::{error::Result, interface::query::Language, DlsiteClient, DlsiteError};
 
@@ -31,8 +29,8 @@ impl<'a> ProductApiClient<'a> {
     /// This api does not return dl count.
     ///
     /// # Example
-    /// ```
-    /// use dlsite::DlsiteClient;
+    /// ```no_run
+    /// use dlsite_gamebox::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {

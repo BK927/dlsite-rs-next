@@ -1,5 +1,5 @@
-/// Cached CSS selectors for search result parsing
-/// This module provides pre-compiled selectors to avoid recompiling them on every parse
+//! Cached CSS selectors for search result parsing
+//! This module provides pre-compiled selectors to avoid recompiling them on every parse
 
 use scraper::Selector;
 use std::sync::OnceLock;

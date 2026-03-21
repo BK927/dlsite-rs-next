@@ -4,45 +4,31 @@ use std::collections::HashMap;
 
 use crate::{
     error::Result,
-    interface::{
-        genre::Genre,
-        product::{AgeCategory, WorkType},
-        query::Language,
-    },
+    interface::genre::Genre,
+    interface::product::{AgeCategory, WorkType},
+    interface::query::Language,
     utils::ToParseError as _,
     DlsiteClient, DlsiteError,
 };
 use ajax::ProductAjax;
 use chrono::NaiveDate;
+use super::product_api::interface::{Creators, Creator, GenreApi};
 
 pub mod ajax;
-pub mod html;
 pub mod review;
-#[cfg(test)]
-mod test;
 
-/// Client to retrieve DLsite product data using 'scraping' method.
+/// Client to retrieve DLsite product data using JSON APIs.
 ///
-/// # Scraping vs API
+/// # API Methods
 ///
-/// There are two way to get product data from DLsite.
-/// 1. the 'scraping' method (this client's method): This reproduces the behavior of browsing a DLSite site in a browser. That is, it retrieves the DLsite html file and scrapes it.
-/// 2. the 'api' method (in [`super::product_api::ProductApiClient`]): this uses directly the API that DLsite provides for their app.
-///    This is a json api, so it is easy to parse, but has the problem that some data can only be obtained by the scrapping method,
-///    and if DLsite changes their api, it will be unusable until this library follows suit.
+/// There are multiple ways to get product data from DLsite:
+/// 1. **AJAX API** (`get_ajax`): Returns product info from the AJAX endpoint
+/// 2. **Product API** (`product_api`): Returns detailed product info from the JSON API
+/// 3. **Review API** (`get_review`): Returns product reviews
+/// 4. **Combined** (`get_all`): Combines all APIs for complete product info
 ///
-/// ## Details about scraping method
-/// Actually, the 'scraping' method does more than just scraping html:
-/// when browsing the DLsite, some information, such as product details and review information,
-/// is retrieved from a separate ajax api.
-///
-/// Scraping is specifically performed by the following process
-/// 1. parsing HTML to obtain basic product information
-/// 2. retrieve detailed product information and related products via an API
-///    (this is completely different from the api used in the api method, and is referred to as the 'ajax api' in this crate.)
-/// 3. retrieve review information by another api (called 'review api')
-///
-/// So this client has a `get_all` method to do all 1-3 and get the complete information, and each method to do only each.
+/// The `get_all` method is recommended for most use cases as it provides
+/// the most comprehensive product information.
 #[derive(Clone, Debug)]
 pub struct ProductClient<'a> {
     pub(crate) c: &'a DlsiteClient,
@@ -54,11 +40,11 @@ pub struct Product {
     pub id: String,
     pub title: String,
     pub work_type: WorkType,
-    pub released_at: NaiveDate,
+    pub released_at: Option<NaiveDate>,
     pub age_rating: Option<AgeCategory>,
     pub genre: Vec<Genre>,
-    pub circle_id: String,
-    pub circle_name: String,
+    pub circle_id: Option<String>,
+    pub circle_name: Option<String>,
     pub price: i32,
     pub series: Option<String>,
     pub sale_count: Option<i32>,
@@ -66,15 +52,13 @@ pub struct Product {
     pub rating: Option<f32>,
     pub rate_count: Option<i32>,
     pub images: Vec<String>,
-    pub people: ProductPeople,
+    pub people: Option<ProductPeople>,
     pub reviewer_genre: Vec<(Genre, i32)>,
-    pub file_format: Vec<String>,
     pub file_size: Option<String>,
-    pub product_format: Vec<String>,
 }
 
 /// People who contributed to a product on DLsite.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ProductPeople {
     pub author: Option<Vec<String>>,
     pub scenario: Option<Vec<String>>,
@@ -82,15 +66,38 @@ pub struct ProductPeople {
     pub voice_actor: Option<Vec<String>>,
 }
 
+impl From<Creators> for ProductPeople {
+    fn from(creators: Creators) -> Self {
+        Self {
+            author: creators.created_by.map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
+            scenario: creators.scenario_by.map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
+            illustrator: creators.illust_by.map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
+            voice_actor: creators.voice_by.map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
+        }
+    }
+}
+
+fn parse_date(date_str: &str) -> Option<NaiveDate> {
+    // Try parsing various date formats
+    // Format: "YYYY-MM-DD HH:MM:SS" or "YYYY-MM-DD"
+    let date_str = date_str.split(' ').next()?;
+    NaiveDate::parse_from_str(date_str, "%Y-%m-%d").ok()
+}
+
 impl<'a> ProductClient<'a> {
-    /// Get full information about a product. For more detail, see documentation of [`ProductClient`].
+    /// Get full information about a product by combining multiple JSON APIs.
+    ///
+    /// This method fetches data from:
+    /// - AJAX API: Basic product info (title, price, ratings, sales)
+    /// - Product API: Detailed info (maker, genres, creators, images)
+    /// - Review API: Reviewer genre breakdown
     ///
     /// # Arguments
     /// * `product_id` - The product ID to get information about. Example: `RJ123456`. NOTE: This must be capitalized.
     ///
     /// # Example
-    /// ```
-    /// use dlsite::DlsiteClient;
+    /// ```no_run
+    /// use dlsite_gamebox::DlsiteClient;
     /// #[tokio::main]
     /// async fn main() {
     ///     let client = DlsiteClient::default();
@@ -99,44 +106,53 @@ impl<'a> ProductClient<'a> {
     /// }
     /// ```
     pub async fn get_all(&self, product_id: &str) -> Result<Product> {
-        let (html_data, ajax_data, review_data) = tokio::try_join!(
-            self.get_html(product_id),
-            self.get_ajax(product_id),
-            self.get_review(product_id, 6, 1, true, review::ReviewSortOrder::New)
+        // Fetch all data concurrently
+        let ajax_future = self.get_ajax(product_id);
+        let product_api_client = self.c.product_api();
+        let api_future = product_api_client.get(product_id);
+        let review_future = self.get_review(product_id, 6, 1, true, review::ReviewSortOrder::New);
+
+        let (ajax_data, api_data, review_data) = tokio::try_join!(
+            ajax_future,
+            api_future,
+            review_future
         )?;
+
+        // Convert genres from API format
+        let genre: Vec<Genre> = api_data.genres.into_iter().map(|g: GenreApi| Genre {
+            name: g.name,
+            id: g.id.to_string(),
+        }).collect();
+
+        // Convert creators to ProductPeople
+        let people = api_data.creators.map(ProductPeople::from);
+
+        // Extract images from API data
+        let images: Vec<String> = api_data
+            .image_samples
+            .map(|samples| samples.into_iter().map(|f| f.url).collect())
+            .unwrap_or_default();
 
         Ok(Product {
             id: product_id.to_string(),
             title: ajax_data.work_name,
             work_type: ajax_data.work_type,
-            released_at: html_data.released_at,
-            age_rating: html_data.age_rating,
-            genre: html_data.genre,
-            series: html_data.series,
-            circle_name: html_data.circle_name,
-            circle_id: html_data.circle_id,
+            released_at: api_data.regist_date.as_ref().and_then(|d| parse_date(d)),
+            age_rating: Some(api_data.age_category),
+            genre,
+            series: api_data.series_name,
+            circle_id: Some(api_data.maker_id),
+            circle_name: Some(api_data.maker_name),
             price: ajax_data.price,
             rating: ajax_data.rate_average_2dp,
             rate_count: ajax_data.rate_count,
             sale_count: ajax_data.dl_count,
             review_count: ajax_data.review_count,
-            images: html_data.images,
-            people: html_data.people,
+            images,
+            people,
             reviewer_genre: review_data.reviewer_genre_list.unwrap_or_default(),
-            file_format: html_data.file_format,
-            file_size: html_data.file_size,
-            product_format: html_data.product_format,
+            file_size: api_data.file_size,
         })
-    }
-
-    /// Scrapes the HTML page of a product and parses it.
-    #[tracing::instrument(err)]
-    pub async fn get_html(&self, product_id: &str) -> Result<html::ProductHtml> {
-        let path = format!("/work/=/product_id/{}", product_id);
-        let html = self.c.get(&path).await?;
-        let html = scraper::Html::parse_document(&html);
-
-        html::parse_product_html(&html)
     }
 
     /// Fetch detailed product information using 'ajax api'.

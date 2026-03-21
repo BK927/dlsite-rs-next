@@ -65,8 +65,8 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 
 - Get product by api
 
-  ```rust
-  use dlsite::DlsiteClient;
+  ```rust,no_run
+  use dlsite_gamebox::DlsiteClient;
 
   #[tokio::main]
   async fn main() {
@@ -77,20 +77,22 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   ```
 
 - Search products (with automatic parallel parsing and caching)
+  **Note: Requires `search-html` feature flag**
 
-  ```rust
-  use dlsite::{DlsiteClient, client::search::SearchProductQuery, interface::query::*};
+  ```rust,ignore
+  use dlsite_gamebox::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
 
   #[tokio::main]
   async fn main() {
       let client = DlsiteClient::default();
+      let query = SearchProductQuery {
+          sex_category: Some(vec![SexCategory::Male]),
+          keyword: Some("ASMR".to_string()),
+          ..Default::default()
+      };
       let results = client
           .search()
-          .search_product(&SearchProductQuery {
-              sex_category: Some(vec![SexCategory::Male]),
-              keyword: Some("ASMR".to_string()),
-              ..Default::default()
-          })
+          .search_product(&query)
           .await
           .expect("Failed to search");
       println!("Found {} products", results.products.len());
@@ -100,9 +102,10 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 ### Advanced Usage
 
 - Batch query multiple pages concurrently
+  **Note: Requires `search-html` feature flag**
 
-  ```rust
-  use dlsite::{DlsiteClient, client::search::SearchProductQuery, interface::query::*};
+  ```rust,ignore
+  use dlsite_gamebox::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
 
   #[tokio::main]
   async fn main() {
@@ -133,9 +136,10 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   ```
 
 - Stream large result sets with callback
+  **Note: Requires `search-html` feature flag**
 
-  ```rust
-  use dlsite::{DlsiteClient, client::search::SearchProductQuery, interface::query::*};
+  ```rust,ignore
+  use dlsite_gamebox::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
 
   #[tokio::main]
   async fn main() {
@@ -159,8 +163,8 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 
 - Custom client configuration
 
-  ```rust
-  use dlsite::{DlsiteClient, RetryConfig};
+  ```rust,no_run
+  use dlsite_gamebox::{DlsiteClient, RetryConfig};
   use std::time::Duration;
 
   #[tokio::main]

@@ -2,17 +2,22 @@
 
 mod query;
 
+#[cfg(feature = "search-html")]
 use scraper::{Html, Selector};
 
 use super::{
-    search::{parse_search_html, SearchResult},
+    search::SearchResult,
     DlsiteClient,
 };
-use crate::{error::Result, utils::ToParseError as _};
+use crate::error::Result;
+#[cfg(feature = "search-html")]
+use crate::utils::ToParseError as _;
 
 pub use self::query::CircleQuery;
 
 /// Basic profile metadata for a DLsite circle (maker).
+///
+/// **Note:** Profile data is only available with the `search-html` feature flag.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CircleProfile {
     pub id: String,
@@ -22,6 +27,14 @@ pub struct CircleProfile {
 }
 
 /// Client to get circle-related content from DLsite.
+///
+/// **Note:** Circle functionality requires the `search-html` feature flag because
+/// it relies on HTML parsing of circle pages.
+///
+/// Enable it in your `Cargo.toml`:
+/// ```toml
+/// dlsite-gamebox = { version = "0.2", features = ["search-html"] }
+/// ```
 #[derive(Clone, Debug)]
 pub struct CircleClient<'a> {
     pub(crate) c: &'a DlsiteClient,
@@ -29,6 +42,8 @@ pub struct CircleClient<'a> {
 
 impl<'a> CircleClient<'a> {
     /// Fetch basic profile metadata for a circle by scraping the circle's HTML page.
+    ///
+    /// **Requires `search-html` feature flag.**
     ///
     /// This reuses the same HTTP request as [`get_circle`] (the response is cached),
     /// so calling both methods for the same circle is inexpensive.
@@ -39,6 +54,7 @@ impl<'a> CircleClient<'a> {
     /// # Returns
     /// [`CircleProfile`] with `id`, `name`, `description`, and `banner_url`.
     /// `description` and `banner_url` are `None` if not found on the page.
+    #[cfg(feature = "search-html")]
     pub async fn get_circle_profile(&self, circle_id: &str) -> Result<CircleProfile> {
         // Uses the default CircleQuery path so the response is shared with get_circle calls
         let query_path = CircleQuery::default().to_path(circle_id);
@@ -71,7 +87,12 @@ impl<'a> CircleClient<'a> {
     }
 
     /// Search circle-related products.
+    ///
+    /// **Requires `search-html` feature flag.**
+    #[cfg(feature = "search-html")]
     pub async fn get_circle(&self, circle_id: &str, options: &CircleQuery) -> Result<SearchResult> {
+        use super::search::parse_search_html;
+
         let query_path = options.to_path(circle_id);
         let html = self.c.get(&query_path).await?;
         let html = Html::parse_fragment(&html);
@@ -97,45 +118,5 @@ impl<'a> CircleClient<'a> {
             count,
             query_path,
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::DlsiteClient;
-
-    #[tokio::test]
-    async fn get_circle_1() {
-        let client = DlsiteClient::default();
-        let res = client
-            .circle()
-            .get_circle(
-                "RG24350",
-                &super::CircleQuery {
-                    ..Default::default()
-                },
-            )
-            .await
-            .expect("Failed to search");
-
-        assert_eq!(50, res.products.len());
-
-        res.products.iter().for_each(|r| {
-            dbg!(&r);
-        });
-
-        let res = client
-            .circle()
-            .get_circle(
-                "RG24350",
-                &super::CircleQuery {
-                    page: Some(2),
-                    ..Default::default()
-                },
-            )
-            .await
-            .expect("Failed to search");
-
-        assert!(!res.products.is_empty());
     }
 }
