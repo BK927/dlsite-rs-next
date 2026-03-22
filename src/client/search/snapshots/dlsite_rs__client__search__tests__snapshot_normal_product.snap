@@ -1,0 +1,18 @@
+---
+source: src/client/search/mod.rs
+expression: snapshot
+---
+{
+  "age_category": "General",
+  "circle_id": "RG24350",
+  "circle_name": "Example Circle",
+  "creator": "Example Author",
+  "dl_count": 1234,
+  "id": "RJ403038",
+  "price_original": 1100,
+  "price_sale": null,
+  "rating": 4.5,
+  "review_count": 56,
+  "title": "Example Work Title",
+  "work_type": "SOU"
+}

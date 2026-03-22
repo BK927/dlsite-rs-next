@@ -99,6 +99,15 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 - **Retry Logic**: Automatic retry with exponential backoff for transient failures
 - **Connection Pooling**: Configurable connection pool for better resource usage
 
+### Maintainability
+- **Unified Selector Architecture**: All CSS selectors are centralized in a single module with caching for consistent parsing behavior
+- **Comprehensive Test Coverage**: Fixture-based parser tests and wiremock-based integration tests ensure reliability without network dependencies
+
+### Code Quality
+- **Centralized Selectors**: All CSS selectors are defined in a single module with caching for consistency
+- **Comprehensive Testing**: HTML fixture-based parser tests with snapshot testing for regression detection
+- **Mock Integration Tests**: Network-free tests using wiremock for reliable CI/CD
+
 ## Example
 
 ### Basic Usage

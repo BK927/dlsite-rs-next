@@ -6,6 +6,22 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+#### Internal Improvements
+- **Search Parser Refactoring**: Unified selector usage across all search parsing functions
+  - All search parsers (`parse_search_html`, `parse_search_html_parallel`, `search_product_stream`) now use cached selectors from `selectors.rs`
+  - `parse_search_html()` now reuses `parse_search_item_html()` internally, eliminating ~200 lines of duplicated code
+  - Added `search_result_items()` selector for `#search_result_img_box > li` list items
+  - Selector definitions are now centralized in a single module for easier maintenance
+
+#### Testing Enhancements
+- Added HTML fixture-based parser tests with `insta` snapshot testing
+  - Tests cover: normal products, discounted products, products without creator, products without review/rating, adult products, R-15 products
+  - Snapshot tests capture parsed output for regression detection
+- Added `wiremock`-based integration tests for `SearchClient`
+  - Tests cover: response parsing, count reflection, error handling (404, malformed JSON), empty results
+  - Tests verify cache behavior and batch query functionality
+  - All tests run without network access
+
 #### Breaking Changes
 - Crate renamed from `dlsite-gamebox` to `dlsite-rs`
 - `DlsiteClientBuilder::build()` now returns `Result<DlsiteClient, DlsiteError>` instead of panicking

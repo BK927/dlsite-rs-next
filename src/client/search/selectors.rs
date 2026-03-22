@@ -95,3 +95,11 @@ pub fn creator_link() -> &'static Selector {
     static SELECTOR: OnceLock<Selector> = OnceLock::new();
     SELECTOR.get_or_init(|| Selector::parse("a").expect("Failed to parse selector"))
 }
+
+/// Get the selector for search result item list elements
+pub fn search_result_items() -> &'static Selector {
+    static SELECTOR: OnceLock<Selector> = OnceLock::new();
+    SELECTOR.get_or_init(|| {
+        Selector::parse("#search_result_img_box > li").expect("Failed to parse selector")
+    })
+}

@@ -1,0 +1,10 @@
+---
+source: src/client/search/mod.rs
+expression: snapshot
+---
+{
+  "discount_percentage": 50.0,
+  "id": "RJ500123",
+  "price_original": 2200,
+  "price_sale": 1100
+}
