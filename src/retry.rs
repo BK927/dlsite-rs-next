@@ -1,5 +1,5 @@
-use std::time::Duration;
 use crate::error::DlsiteError;
+use std::time::Duration;
 
 /// Retry configuration for HTTP requests
 #[derive(Clone, Debug)]
@@ -38,8 +38,8 @@ impl RetryConfig {
 
     /// Calculate the delay for a given retry attempt
     pub fn calculate_delay(&self, attempt: u32) -> Duration {
-        let delay_ms = self.initial_delay.as_millis() as f64
-            * self.backoff_multiplier.powi(attempt as i32);
+        let delay_ms =
+            self.initial_delay.as_millis() as f64 * self.backoff_multiplier.powi(attempt as i32);
         let delay_ms = delay_ms.min(self.max_delay.as_millis() as f64);
         Duration::from_millis(delay_ms as u64)
     }
@@ -82,7 +82,7 @@ mod tests {
         let delay_0 = config.calculate_delay(0);
         let delay_1 = config.calculate_delay(1);
         let delay_2 = config.calculate_delay(2);
-        
+
         assert_eq!(delay_0, Duration::from_millis(100));
         assert_eq!(delay_1, Duration::from_millis(200));
         assert_eq!(delay_2, Duration::from_millis(400));
@@ -90,11 +90,7 @@ mod tests {
 
     #[test]
     fn test_calculate_delay_max_cap() {
-        let config = RetryConfig::new(
-            3,
-            Duration::from_millis(100),
-            Duration::from_secs(1),
-        );
+        let config = RetryConfig::new(3, Duration::from_millis(100), Duration::from_secs(1));
         let delay_10 = config.calculate_delay(10);
         assert!(delay_10 <= Duration::from_secs(1));
     }
@@ -102,14 +98,13 @@ mod tests {
     #[test]
     fn test_is_retryable() {
         let config = RetryConfig::default();
-        
+
         assert!(config.is_retryable(&DlsiteError::Timeout));
         assert!(config.is_retryable(&DlsiteError::RateLimit("test".to_string())));
         assert!(config.is_retryable(&DlsiteError::HttpStatus(500)));
         assert!(config.is_retryable(&DlsiteError::HttpStatus(503)));
-        
+
         assert!(!config.is_retryable(&DlsiteError::HttpStatus(404)));
         assert!(!config.is_retryable(&DlsiteError::HttpStatus(400)));
     }
 }
-

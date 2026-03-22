@@ -12,22 +12,22 @@ mod query;
 mod selectors;
 
 #[cfg(feature = "search-html")]
+use rayon::prelude::*;
+#[cfg(feature = "search-html")]
 use scraper::{Html, Selector};
 use serde::Deserialize;
-#[cfg(feature = "search-html")]
-use rayon::prelude::*;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
 
+#[cfg(feature = "search-html")]
+use crate::utils::ToParseError;
 use crate::{
+    cache::GenericCache,
     error::Result,
     interface::product::{AgeCategory, WorkType},
     DlsiteClient,
-    cache::GenericCache,
 };
-#[cfg(feature = "search-html")]
-use crate::utils::ToParseError;
 
 pub use self::query::SearchProductQuery;
 
@@ -101,7 +101,10 @@ impl<'a> SearchClient<'a> {
     pub(crate) fn new(c: &'a DlsiteClient) -> Self {
         Self {
             c,
-            result_cache: Arc::new(Mutex::new(GenericCache::new(100, Duration::from_secs(3600)))),
+            result_cache: Arc::new(Mutex::new(GenericCache::new(
+                100,
+                Duration::from_secs(3600),
+            ))),
         }
     }
 
@@ -135,21 +138,23 @@ impl<'a> SearchClient<'a> {
     pub async fn search_product(&self, options: &SearchProductQuery) -> Result<SearchResult> {
         let query_path = options.to_path();
 
-        // Check if results are cached
-        {
+        // Check if results are cached (cache.get() already returns cloned data)
+        let cached_products = {
             let cache = self.result_cache.lock().unwrap();
-            if let Some(cached_products) = cache.get(&query_path) {
-                // Get count from API (it's small and fast)
-                let json = self.c.get(&query_path).await?;
-                let json = serde_json::from_str::<SearchAjaxResult>(&json)?;
-                let count = json.page_info.count;
+            cache.get(&query_path)
+        };
 
-                return Ok(SearchResult {
-                    products: cached_products,
-                    count,
-                    query_path,
-                });
-            }
+        if let Some(cached_products) = cached_products {
+            // Get count from API (it's small and fast) - no lock held here
+            let json = self.c.get(&query_path).await?;
+            let json = serde_json::from_str::<SearchAjaxResult>(&json)?;
+            let count = json.page_info.count;
+
+            return Ok(SearchResult {
+                products: cached_products,
+                count,
+                query_path,
+            });
         }
 
         // Cache miss - fetch and parse
@@ -186,11 +191,11 @@ impl<'a> SearchClient<'a> {
     /// # Returns
     /// * `Vec<SearchResult>` - Results for each query in the same order
     #[cfg(feature = "search-html")]
-    pub async fn search_products_batch(&self, queries: &[SearchProductQuery]) -> Result<Vec<SearchResult>> {
-        let futures: Vec<_> = queries
-            .iter()
-            .map(|q| self.search_product(q))
-            .collect();
+    pub async fn search_products_batch(
+        &self,
+        queries: &[SearchProductQuery],
+    ) -> Result<Vec<SearchResult>> {
+        let futures: Vec<_> = queries.iter().map(|q| self.search_product(q)).collect();
 
         futures::future::try_join_all(futures).await
     }
@@ -208,7 +213,11 @@ impl<'a> SearchClient<'a> {
     /// # Returns
     /// * `Result<i32>` - Total count of items
     #[cfg(feature = "search-html")]
-    pub async fn search_product_stream<F>(&self, options: &SearchProductQuery, mut callback: F) -> Result<i32>
+    pub async fn search_product_stream<F>(
+        &self,
+        options: &SearchProductQuery,
+        mut callback: F,
+    ) -> Result<i32>
     where
         F: FnMut(SearchProductItem),
     {
@@ -249,17 +258,13 @@ fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
         .select(selectors::maker_name())
         .next()
         .to_parse_error("Failed to find maker element")?;
-    let author_e = item_element
-        .select(selectors::author())
-        .next();
+    let author_e = item_element.select(selectors::author()).next();
 
     let price_e = item_element
         .select(selectors::work_price())
         .next()
         .to_parse_error("Failed to find price element")?;
-    let original_price_e = item_element
-        .select(selectors::original_price())
-        .next();
+    let original_price_e = item_element.select(selectors::original_price()).next();
     let (sale_price_e, original_price_e) = if let Some(e) = original_price_e {
         (Some(price_e), e)
     } else {
@@ -281,10 +286,7 @@ fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
             .unwrap()
             .to_string(),
         age_category: {
-            if let Some(e) = item_element
-                .select(selectors::age_category())
-                .next()
-            {
+            if let Some(e) = item_element.select(selectors::age_category()).next() {
                 let title = e.value().attr("title");
                 if let Some(title) = title {
                     match title {
@@ -346,10 +348,7 @@ fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
             }
         },
         dl_count: {
-            if let Some(e) = item_element
-                .select(selectors::dl_count())
-                .next()
-            {
+            if let Some(e) = item_element.select(selectors::dl_count()).next() {
                 Some(
                     e.text()
                         .next()
@@ -363,10 +362,7 @@ fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
             }
         },
         rate_count: {
-            if let Some(e) = item_element
-                .select(selectors::dl_count())
-                .next()
-            {
+            if let Some(e) = item_element.select(selectors::dl_count()).next() {
                 Some(parse_count_str(
                     e.text().next().to_parse_error("Failed to get rate count")?,
                 )?)
@@ -375,10 +371,7 @@ fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
             }
         },
         review_count: {
-            if let Some(e) = item_element
-                .select(selectors::review_count())
-                .next()
-            {
+            if let Some(e) = item_element.select(selectors::review_count()).next() {
                 Some(parse_count_str(
                     e.text()
                         .next()
@@ -442,10 +435,7 @@ fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
             }
         },
         rating: {
-            if let Some(e) = item_element
-                .select(selectors::rating())
-                .next()
-            {
+            if let Some(e) = item_element.select(selectors::rating()).next() {
                 e.value()
                     .attr("class")
                     .expect("Failed to get rating")
@@ -723,4 +713,3 @@ pub(crate) fn parse_search_html_parallel(html: &str) -> Result<Vec<SearchProduct
         .map(|item_html| parse_search_item_html(item_html))
         .collect()
 }
-

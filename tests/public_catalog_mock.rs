@@ -7,13 +7,13 @@
 
 mod common;
 
-use dlsite_gamebox::client::product::ProductPeople;
-use dlsite_gamebox::client::product_api::interface::{Creators, Creator};
-use dlsite_gamebox::interface::product::WorkType;
-use dlsite_gamebox::{DlsiteClient, DlsiteError, RetryConfig};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, query_param};
+use dlsite_rs::client::product::ProductPeople;
+use dlsite_rs::client::product_api::interface::{Creator, Creators};
+use dlsite_rs::interface::product::WorkType;
+use dlsite_rs::{DlsiteClient, DlsiteError, RetryConfig};
 use std::time::Duration;
+use wiremock::matchers::{method, path, query_param};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 async fn setup_mock_server() -> (MockServer, DlsiteClient) {
     let mock_server = MockServer::start().await;

@@ -25,6 +25,7 @@ use super::DlsiteClient;
 /// are confirmed via network capture from the DLsite app or website.
 #[derive(Clone, Debug)]
 pub struct PlayClient<'a> {
+    #[allow(dead_code)]
     pub(crate) c: &'a DlsiteClient,
 }
 

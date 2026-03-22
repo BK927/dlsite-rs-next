@@ -1,8 +1,8 @@
-use std::sync::Arc;
-use std::time::{Duration, Instant};
 use lru::LruCache;
-use std::sync::Mutex;
 use std::num::NonZeroUsize;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
 
 /// Generic cache entry with expiration time
 #[derive(Clone, Debug)]
@@ -157,7 +157,7 @@ mod tests {
         let cache = ResponseCache::new(10, Duration::from_millis(100));
         cache.insert("key1".to_string(), "value1".to_string());
         assert_eq!(cache.get("key1"), Some("value1".to_string()));
-        
+
         std::thread::sleep(Duration::from_millis(150));
         assert_eq!(cache.get("key1"), None);
     }
@@ -168,7 +168,7 @@ mod tests {
         cache.insert("key1".to_string(), "value1".to_string());
         cache.insert("key2".to_string(), "value2".to_string());
         cache.insert("key3".to_string(), "value3".to_string());
-        
+
         // key1 should be evicted
         assert_eq!(cache.get("key1"), None);
         assert_eq!(cache.get("key2"), Some("value2".to_string()));
@@ -181,10 +181,9 @@ mod tests {
         cache.insert("key1".to_string(), "value1".to_string());
         cache.insert("key2".to_string(), "value2".to_string());
         assert_eq!(cache.len(), 2);
-        
+
         cache.clear();
         assert_eq!(cache.len(), 0);
         assert!(cache.is_empty());
     }
 }
-

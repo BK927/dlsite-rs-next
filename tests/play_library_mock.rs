@@ -12,11 +12,11 @@
 
 mod common;
 
-use dlsite_gamebox::adapters::play_library::{LibraryEntry, LibraryCount};
-use dlsite_gamebox::{DlsiteClient, DlsiteError, RetryConfig};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, query_param};
+use dlsite_rs::adapters::play_library::{LibraryCount, LibraryEntry};
+use dlsite_rs::{DlsiteClient, RetryConfig};
 use std::time::Duration;
+use wiremock::matchers::{method, path, query_param};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 async fn setup_mock_server() -> (MockServer, DlsiteClient) {
     let mock_server = MockServer::start().await;
@@ -58,10 +58,9 @@ async fn test_get_count_endpoint_success() {
 
     Mock::given(method("GET"))
         .and(path("/api/v3/content/count"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            COUNT_RESPONSE_BASIC,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(COUNT_RESPONSE_BASIC, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
@@ -79,10 +78,9 @@ async fn test_get_count_endpoint_empty() {
 
     Mock::given(method("GET"))
         .and(path("/api/v3/content/count"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            COUNT_RESPONSE_EMPTY,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(COUNT_RESPONSE_EMPTY, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
@@ -100,10 +98,9 @@ async fn test_get_sales_endpoint_success() {
 
     Mock::given(method("GET"))
         .and(path("/api/v3/content/sales"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            SALES_RESPONSE_PAGE1,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(SALES_RESPONSE_PAGE1, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
@@ -124,10 +121,9 @@ async fn test_get_sales_endpoint_with_pagination() {
     Mock::given(method("GET"))
         .and(path("/api/v3/content/sales"))
         .and(query_param("last", "12345"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            SALES_RESPONSE_PAGE2,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(SALES_RESPONSE_PAGE2, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
@@ -193,10 +189,9 @@ async fn test_get_count_429_with_retry() {
     // Mount success mock first (wiremock uses LIFO, so this will be checked after failure mock)
     Mock::given(method("GET"))
         .and(path("/api/v3/content/count"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            COUNT_RESPONSE_BASIC,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(COUNT_RESPONSE_BASIC, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
@@ -224,10 +219,9 @@ async fn test_get_sales_500_with_retry() {
     // Mount success mock first (wiremock uses LIFO)
     Mock::given(method("GET"))
         .and(path("/api/v3/content/sales"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            SALES_RESPONSE_PAGE1,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(SALES_RESPONSE_PAGE1, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
@@ -264,8 +258,14 @@ fn test_library_entry_parsing_full() {
     assert_eq!(entry.is_downloadable, Some(true));
     assert_eq!(entry.is_play_available, Some(true));
     assert_eq!(entry.file_size, Some("500MB".to_string()));
-    assert_eq!(entry.image_main, Some("//img.dlsite.jp/test.jpg".to_string()));
-    assert_eq!(entry.image_thumb, Some("//img.dlsite.jp/test_thumb.jpg".to_string()));
+    assert_eq!(
+        entry.image_main,
+        Some("//img.dlsite.jp/test.jpg".to_string())
+    );
+    assert_eq!(
+        entry.image_thumb,
+        Some("//img.dlsite.jp/test_thumb.jpg".to_string())
+    );
 }
 
 #[test]

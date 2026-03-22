@@ -16,7 +16,7 @@ mod utils;
 #[cfg(feature = "cookie-store")]
 pub mod adapters;
 
-pub use cache::{ResponseCache, GenericCache};
+pub use cache::{GenericCache, ResponseCache};
 pub use client::{DlsiteClient, DlsiteClientBuilder};
 pub use error::DlsiteError;
 pub use retry::RetryConfig;

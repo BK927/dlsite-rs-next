@@ -24,6 +24,7 @@ use super::DlsiteClient;
 /// endpoints are confirmed via network capture.
 #[derive(Clone, Debug)]
 pub struct UserClient<'a> {
+    #[allow(dead_code)]
     pub(crate) c: &'a DlsiteClient,
 }
 

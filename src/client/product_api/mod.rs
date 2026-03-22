@@ -17,7 +17,7 @@ pub struct ProductApiClient<'a> {
 impl<'a> ProductApiClient<'a> {
     /// Get product detail using api.
     ///
-    /// Uses the client's default locale. For an explicit locale, use [`get_with_locale`].
+    /// Uses the client's default locale. For an explicit locale, use [`Self::get_with_locale`].
     ///
     /// # Arguments
     /// * `id` - Product ID.
@@ -30,7 +30,7 @@ impl<'a> ProductApiClient<'a> {
     ///
     /// # Example
     /// ```no_run
-    /// use dlsite_gamebox::DlsiteClient;
+    /// use dlsite_rs::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {
@@ -40,7 +40,8 @@ impl<'a> ProductApiClient<'a> {
     /// }
     /// ```
     pub async fn get(&self, id: &str) -> Result<ProductApiContent> {
-        self.get_with_locale(id, self.c.default_locale().clone()).await
+        self.get_with_locale(id, self.c.default_locale().clone())
+            .await
     }
 
     /// Get product detail using api with an explicit locale.
@@ -93,7 +94,7 @@ impl<'a> ProductApiClient<'a> {
     ///
     /// # Example
     /// ```no_run
-    /// use dlsite_gamebox::DlsiteClient;
+    /// use dlsite_rs::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {
@@ -117,7 +118,7 @@ impl<'a> ProductApiClient<'a> {
     ///
     /// # Example
     /// ```no_run
-    /// use dlsite_gamebox::DlsiteClient;
+    /// use dlsite_rs::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {

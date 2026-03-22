@@ -14,13 +14,14 @@ pub struct PlayLibraryAdapter<'a> {
 }
 
 impl<'a> PlayLibraryAdapter<'a> {
+    #[allow(dead_code)]
     pub(crate) fn new(client: &'a DlsiteClient) -> Self {
         Self { client }
     }
 
     /// Get library count
     ///
-    /// GET https://play.dlsite.com/api/v3/content/count?last=N
+    /// GET <https://play.dlsite.com/api/v3/content/count?last=N>
     ///
     /// # Arguments
     /// * `last` - Optional pagination token/ID
@@ -41,7 +42,7 @@ impl<'a> PlayLibraryAdapter<'a> {
 
     /// Get library sales (purchased works)
     ///
-    /// GET https://play.dlsite.com/api/v3/content/sales?last=N
+    /// GET <https://play.dlsite.com/api/v3/content/sales?last=N>
     ///
     /// # Arguments
     /// * `last` - Optional pagination token/ID for getting works after this ID
@@ -62,15 +63,15 @@ impl<'a> PlayLibraryAdapter<'a> {
 
     /// Get works by IDs (batch lookup)
     ///
-    /// POST https://play.dlsite.com/api/v3/content/works
+    /// POST <https://play.dlsite.com/api/v3/content/works>
     ///
     /// # Arguments
     /// * `worknos` - List of work IDs to fetch (e.g., ["RJ123456", "RJ789012"])
     ///
     /// # Returns
     /// List of library entries for the requested works
-    pub async fn get_works(&self, worknos: &[&str]) -> Result<Vec<LibraryEntry>> {
-        let url = "https://play.dlsite.com/api/v3/content/works";
+    pub async fn get_works(&self, _worknos: &[&str]) -> Result<Vec<LibraryEntry>> {
+        let _url = "https://play.dlsite.com/api/v3/content/works";
 
         // Note: This requires POST with JSON body
         // For now, we'll return an error indicating this needs implementation

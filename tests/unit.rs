@@ -7,11 +7,11 @@
 
 mod common;
 
+use dlsite_rs::client::product::ProductPeople;
+use dlsite_rs::client::product_api::interface::{Creator, Creators};
+use dlsite_rs::interface::product::WorkType;
+use dlsite_rs::interface::query::Language;
 use std::str::FromStr;
-use dlsite_gamebox::interface::product::WorkType;
-use dlsite_gamebox::interface::query::Language;
-use dlsite_gamebox::client::product::ProductPeople;
-use dlsite_gamebox::client::product_api::interface::{Creators, Creator};
 
 // =============================================================================
 // ID Normalization Tests
@@ -65,9 +65,9 @@ fn test_valid_rg_id_format() {
 
 #[test]
 fn test_invalid_id_too_short() {
-    assert!(!is_valid_work_id_format("RJ1234"));  // 6 chars total - too short
-    assert!(!is_valid_work_id_format("RJ"));      // 2 chars - too short
-    assert!(!is_valid_work_id_format(""));        // 0 chars - too short
+    assert!(!is_valid_work_id_format("RJ1234")); // 6 chars total - too short
+    assert!(!is_valid_work_id_format("RJ")); // 2 chars - too short
+    assert!(!is_valid_work_id_format("")); // 0 chars - too short
 }
 
 #[test]
@@ -222,7 +222,10 @@ fn test_ajax_url_single_product() {
 #[test]
 fn test_ajax_url_multiple_products() {
     let url = build_ajax_url(&["RJ403038", "RJ01017217", "RJ291224"]);
-    assert_eq!(url, "/product/info/ajax?product_id=RJ403038,RJ01017217,RJ291224");
+    assert_eq!(
+        url,
+        "/product/info/ajax?product_id=RJ403038,RJ01017217,RJ291224"
+    );
 }
 
 #[test]
@@ -513,7 +516,7 @@ fn test_name_bucket_empty_or_special() {
 // ProductApiContent Custom Genres Tests
 // =============================================================================
 
-use dlsite_gamebox::client::product_api::interface::{ProductApiContent, CustomGenre, GenreApi};
+use dlsite_rs::client::product_api::interface::{CustomGenre, GenreApi};
 
 #[test]
 fn test_custom_genre_structure() {
@@ -558,7 +561,7 @@ fn test_genre_api_structure() {
 // Review Sort Order Tests
 // =============================================================================
 
-use dlsite_gamebox::client::product::review::ReviewSortOrder;
+use dlsite_rs::client::product::review::ReviewSortOrder;
 
 #[test]
 fn test_review_sort_order_exists() {
@@ -572,7 +575,7 @@ fn test_review_sort_order_exists() {
 // =============================================================================
 
 #[cfg(feature = "search-html")]
-use dlsite_gamebox::client::circle::CircleProfile;
+use dlsite_rs::client::circle::CircleProfile;
 
 #[cfg(feature = "search-html")]
 #[test]

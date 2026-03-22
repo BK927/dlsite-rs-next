@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+#### Breaking Changes
+- Crate renamed from `dlsite-gamebox` to `dlsite-rs`
+- `DlsiteClientBuilder::build()` now returns `Result<DlsiteClient, DlsiteError>` instead of panicking
+- Default TLS backend changed from native-tls to rustls-tls
+- Removed `reqwest-default-tls` feature (use `reqwest-native-tls` instead)
+
+#### Improvements
+- User-Agent now uses `env!("CARGO_PKG_NAME")` and `env!("CARGO_PKG_VERSION")` instead of hardcoded string
+- Rate limiting now uses `tokio::sync::Mutex` for thread-safe throttling (fixes race condition in AtomicU64 implementation)
+- Added `DlsiteClient::try_new()` for fallible construction
+
+#### Metadata
+- Added `rust-version = "1.75"` to Cargo.toml
+- Added `documentation = "https://docs.rs/dlsite-rs"` to Cargo.toml
+- Added `include` array to limit published files
+- Updated repository URL to `https://github.com/BK927/dlsite-rs-next`
+- Added LICENSE file (MIT)
+
+### Migration Guide
+
+```rust
+// Before (0.1.x):
+use dlsite_gamebox::DlsiteClient;
+
+// After (0.2.0+):
+use dlsite_rs::DlsiteClient;
+
+// If you relied on panic behavior (still works):
+let client = DlsiteClient::new("https://www.dlsite.com/maniax");
+
+// For fallible construction (new):
+let client = DlsiteClient::try_new("https://www.dlsite.com/maniax")?;
+
+// Builder now returns Result:
+let client = DlsiteClient::builder("https://www.dlsite.com/maniax")
+    .timeout(Duration::from_secs(60))
+    .build()?;  // Changed: now returns Result
+
+// TLS feature rename:
+// Before: features = ["reqwest-default-tls"]
+// After:  features = ["reqwest-native-tls"]
+```
+
 ### Added
 
 #### Product API Helpers

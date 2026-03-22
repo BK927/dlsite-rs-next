@@ -4,8 +4,8 @@ use crate::interface::query::Language;
 use crate::interface::site::Site;
 use crate::retry::RetryConfig;
 use std::sync::Arc;
-use std::sync::atomic::AtomicU64;
-use std::time::Duration;
+use std::time::{Duration, Instant};
+use tokio::sync::Mutex;
 
 pub mod circle;
 pub mod product;
@@ -20,14 +20,40 @@ pub mod play;
 #[cfg(feature = "cookie-store")]
 pub mod user;
 
+/// Rate limiter state for controlling request frequency.
+#[derive(Debug)]
+struct RateLimiter {
+    last_request: Instant,
+    min_interval: Duration,
+}
+
+impl RateLimiter {
+    /// Create a new rate limiter with the specified minimum interval between requests.
+    fn new(min_interval: Duration) -> Self {
+        Self {
+            // Initialize with elapsed time to allow first request immediately
+            last_request: Instant::now() - min_interval,
+            min_interval,
+        }
+    }
+
+    /// Wait until rate limit allows, then record the request time.
+    async fn throttle(&mut self) {
+        let elapsed = self.last_request.elapsed();
+        if elapsed < self.min_interval {
+            tokio::time::sleep(self.min_interval - elapsed).await;
+        }
+        self.last_request = Instant::now();
+    }
+}
+
 /// API client for DLsite.
 #[derive(Clone, Debug)]
 pub struct DlsiteClient {
     client: reqwest::Client,
     base_url: String,
     /// Rate limiter to prevent IP bans (2 requests per second by default)
-    /// Stores the timestamp of the last request in milliseconds
-    last_request_time: Arc<AtomicU64>,
+    rate_limiter: Arc<Mutex<RateLimiter>>,
     /// Response cache for caching HTTP responses
     cache: ResponseCache,
     /// Retry configuration for automatic retries
@@ -98,35 +124,42 @@ impl DlsiteClientBuilder {
         self
     }
 
-    /// Set the target DLsite site. Overrides the base URL set in [`new`].
+    /// Set the target DLsite site. Overrides the base URL set in [`Self::new`].
     pub fn site(mut self, site: Site) -> Self {
         self.base_url = site.base_url();
         self
     }
 
-    /// Build the DlsiteClient
-    pub fn build(self) -> DlsiteClient {
+    /// Build the DlsiteClient.
+    ///
+    /// Returns an error if the HTTP client cannot be constructed
+    /// (e.g., invalid TLS configuration).
+    pub fn build(self) -> Result<DlsiteClient> {
+        let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+
         #[allow(unused_mut)]
         let mut builder = reqwest::Client::builder()
             .pool_max_idle_per_host(self.pool_max_idle_per_host)
             .timeout(self.timeout)
-            .user_agent("dlsite-rs/0.2.0");
+            .user_agent(&user_agent);
 
         #[cfg(feature = "cookie-store")]
         {
             builder = builder.cookie_store(true);
         }
 
-        let client = builder.build().expect("Failed to build HTTP client");
+        let client = builder
+            .build()
+            .map_err(|e| DlsiteError::Parse(format!("Failed to build HTTP client: {}", e)))?;
 
-        DlsiteClient {
+        Ok(DlsiteClient {
             client,
             base_url: self.base_url,
-            last_request_time: Arc::new(AtomicU64::new(0)),
+            rate_limiter: Arc::new(Mutex::new(RateLimiter::new(Duration::from_millis(500)))),
             cache: ResponseCache::new(self.cache_capacity, self.cache_ttl),
             retry_config: self.retry_config,
             default_locale: self.default_locale,
-        }
+        })
     }
 }
 
@@ -139,19 +172,39 @@ impl DlsiteClient {
     /// The client is configured with:
     /// - Connection pool: 10 idle connections per host
     /// - Timeout: 30 seconds
-    /// - User-Agent: dlsite-rs/0.2.0
+    /// - User-Agent: dlsite-rs/\<version\>
     /// - Rate limit: 2 requests per second
     /// - Cache: 100 entries with 1 hour TTL
     /// - Retry: 3 attempts with exponential backoff
+    ///
+    /// # Panics
+    ///
+    /// Panics if the HTTP client cannot be constructed. For fallible construction,
+    /// use [`DlsiteClient::try_new`].
     pub fn new(base_url: &str) -> Self {
+        DlsiteClientBuilder::new(base_url)
+            .build()
+            .expect("Failed to build DlsiteClient")
+    }
+
+    /// Create a new DLsite client, returning an error on failure.
+    ///
+    /// This is the fallible version of [`DlsiteClient::new`].
+    pub fn try_new(base_url: &str) -> Result<Self> {
         DlsiteClientBuilder::new(base_url).build()
     }
 
     /// Create a new DLsite client targeting a specific [`Site`].
     ///
     /// Equivalent to `DlsiteClient::new(&site.base_url())`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the HTTP client cannot be constructed.
     pub fn for_site(site: Site) -> Self {
-        DlsiteClientBuilder::new(&site.base_url()).build()
+        DlsiteClientBuilder::new(&site.base_url())
+            .build()
+            .expect("Failed to build DlsiteClient")
     }
 
     /// Create a builder for customizing the client configuration
@@ -176,21 +229,8 @@ impl DlsiteClient {
         // Retry loop
         let mut last_error = None;
         for attempt in 0..=self.retry_config.max_retries {
-            // Rate limiting: ensure at least 500ms between requests (2 req/sec)
-            let now = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_millis() as u64;
-
-            let last_time = self.last_request_time.load(std::sync::atomic::Ordering::Relaxed);
-            let elapsed = now.saturating_sub(last_time);
-
-            if elapsed < 500 {
-                let sleep_time = Duration::from_millis(500 - elapsed);
-                tokio::time::sleep(sleep_time).await;
-            }
-
-            self.last_request_time.store(now, std::sync::atomic::Ordering::Relaxed);
+            // Rate limiting (thread-safe)
+            self.rate_limiter.lock().await.throttle().await;
 
             match self.client.get(&url).send().await {
                 Ok(response) => {
@@ -198,9 +238,11 @@ impl DlsiteClient {
                     let status = response.status();
                     if status == 429 {
                         let err = DlsiteError::RateLimit(
-                            "Too many requests, please retry later".to_string()
+                            "Too many requests, please retry later".to_string(),
                         );
-                        if attempt < self.retry_config.max_retries && self.retry_config.is_retryable(&err) {
+                        if attempt < self.retry_config.max_retries
+                            && self.retry_config.is_retryable(&err)
+                        {
                             last_error = Some(err);
                             let delay = self.retry_config.calculate_delay(attempt);
                             tokio::time::sleep(delay).await;
@@ -210,17 +252,17 @@ impl DlsiteClient {
                     }
                     if status == 401 {
                         return Err(DlsiteError::AuthRequired(
-                            "HTTP 401 Unauthorized".to_string()
+                            "HTTP 401 Unauthorized".to_string(),
                         ));
                     }
                     if status == 403 {
-                        return Err(DlsiteError::AuthRequired(
-                            "HTTP 403 Forbidden".to_string()
-                        ));
+                        return Err(DlsiteError::AuthRequired("HTTP 403 Forbidden".to_string()));
                     }
                     if !status.is_success() {
                         let err = DlsiteError::HttpStatus(status.as_u16());
-                        if attempt < self.retry_config.max_retries && self.retry_config.is_retryable(&err) {
+                        if attempt < self.retry_config.max_retries
+                            && self.retry_config.is_retryable(&err)
+                        {
                             last_error = Some(err);
                             let delay = self.retry_config.calculate_delay(attempt);
                             tokio::time::sleep(delay).await;
@@ -238,7 +280,9 @@ impl DlsiteClient {
                 }
                 Err(e) => {
                     let err = DlsiteError::from(e);
-                    if attempt < self.retry_config.max_retries && self.retry_config.is_retryable(&err) {
+                    if attempt < self.retry_config.max_retries
+                        && self.retry_config.is_retryable(&err)
+                    {
                         last_error = Some(err);
                         let delay = self.retry_config.calculate_delay(attempt);
                         tokio::time::sleep(delay).await;
@@ -285,34 +329,34 @@ impl DlsiteClient {
     }
 }
 
-/// These methods return a “sub-client”.
+/// These methods return a "sub-client".
 /// The sub-client has a DlsiteClient reference inside and has implementations of fetch and parse focused on certain purposes.
 impl DlsiteClient {
     /// Get a client to fetch product info using 'scraping' method. For more information, see [`product::ProductClient`].
-    pub fn product(&self) -> product::ProductClient {
+    pub fn product(&self) -> product::ProductClient<'_> {
         product::ProductClient { c: self }
     }
 
     /// Get a client to fetch product info using 'api' method. For more information, see
     /// [`product_api::ProductApiClient`].
-    pub fn product_api(&self) -> product_api::ProductApiClient {
+    pub fn product_api(&self) -> product_api::ProductApiClient<'_> {
         product_api::ProductApiClient { c: self }
     }
 
     /// Get a client to fetch circle info. For more information, see [`circle::CircleClient`].
-    pub fn circle(&self) -> circle::CircleClient {
+    pub fn circle(&self) -> circle::CircleClient<'_> {
         circle::CircleClient { c: self }
     }
 
     /// Get a client to search things. For more information, see [`search::SearchClient`].
-    pub fn search(&self) -> search::SearchClient {
+    pub fn search(&self) -> search::SearchClient<'_> {
         search::SearchClient::new(self)
     }
 
     /// Get a client for ranking data. For more information, see [`ranking::RankingClient`].
     ///
     /// Note: ranking endpoints are not yet implemented — see `docs/dlsite_gap_analysis.md`.
-    pub fn ranking(&self) -> ranking::RankingClient {
+    pub fn ranking(&self) -> ranking::RankingClient<'_> {
         ranking::RankingClient { c: self }
     }
 
@@ -320,7 +364,7 @@ impl DlsiteClient {
     ///
     /// Note: auth endpoints are not yet implemented — see `docs/dlsite_gap_analysis.md`.
     #[cfg(feature = "cookie-store")]
-    pub fn auth(&self) -> auth::AuthClient {
+    pub fn auth(&self) -> auth::AuthClient<'_> {
         auth::AuthClient { c: self }
     }
 
@@ -328,7 +372,7 @@ impl DlsiteClient {
     ///
     /// Note: Play endpoints are not yet implemented — see `docs/dlsite_gap_analysis.md`.
     #[cfg(feature = "cookie-store")]
-    pub fn play(&self) -> play::PlayClient {
+    pub fn play(&self) -> play::PlayClient<'_> {
         play::PlayClient { c: self }
     }
 
@@ -336,7 +380,7 @@ impl DlsiteClient {
     ///
     /// Note: user endpoints are not yet implemented — see `docs/dlsite_gap_analysis.md`.
     #[cfg(feature = "cookie-store")]
-    pub fn user(&self) -> user::UserClient {
+    pub fn user(&self) -> user::UserClient<'_> {
         user::UserClient { c: self }
     }
 }

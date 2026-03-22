@@ -14,13 +14,14 @@ pub struct DownloadAdapter<'a> {
 }
 
 impl<'a> DownloadAdapter<'a> {
+    #[allow(dead_code)]
     pub(crate) fn new(client: &'a DlsiteClient) -> Self {
         Self { client }
     }
 
     /// Get download target URL
     ///
-    /// GET https://play.dlsite.com/api/v3/download?workno=WORK_ID
+    /// GET <https://play.dlsite.com/api/v3/download?workno=WORK_ID>
     ///
     /// This endpoint returns a 302 redirect to the actual download URL.
     /// The response contains the signed download URL and metadata.
@@ -31,10 +32,7 @@ impl<'a> DownloadAdapter<'a> {
     /// # Returns
     /// Download target information including the signed URL
     pub async fn get_download_target(&self, workno: &str) -> Result<DownloadTarget> {
-        let url = format!(
-            "https://play.dlsite.com/api/v3/download?workno={}",
-            workno
-        );
+        let url = format!("https://play.dlsite.com/api/v3/download?workno={}", workno);
 
         let json_str = self.client.get_raw(&url).await?;
         let result: DownloadTarget = serde_json::from_str(&json_str)?;

@@ -25,6 +25,7 @@ use super::DlsiteClient;
 /// token flow are confirmed via network capture.
 #[derive(Clone, Debug)]
 pub struct AuthClient<'a> {
+    #[allow(dead_code)]
     pub(crate) c: &'a DlsiteClient,
 }
 

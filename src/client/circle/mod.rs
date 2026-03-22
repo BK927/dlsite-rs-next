@@ -5,10 +5,9 @@ mod query;
 #[cfg(feature = "search-html")]
 use scraper::{Html, Selector};
 
-use super::{
-    search::{SearchProductItem, SearchResult},
-    DlsiteClient,
-};
+#[cfg(feature = "search-html")]
+use super::search::{SearchProductItem, SearchResult};
+use super::DlsiteClient;
 use crate::error::Result;
 #[cfg(feature = "search-html")]
 use crate::utils::ToParseError as _;
@@ -87,7 +86,7 @@ impl<'a> CircleClient<'a> {
     ///
     /// **Requires `search-html` feature flag.**
     ///
-    /// This reuses the same HTTP request as [`get_circle`] (the response is cached),
+    /// This reuses the same HTTP request as \[`get_circle_profile`\] (the response is cached),
     /// so calling both methods for the same circle is inexpensive.
     ///
     /// # Arguments
@@ -178,7 +177,7 @@ impl<'a> CircleClient<'a> {
     ///
     /// # Example
     /// ```ignore
-    /// use dlsite_gamebox::DlsiteClient;
+    /// use dlsite_rs::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {
@@ -215,7 +214,7 @@ impl<'a> CircleClient<'a> {
     ///
     /// # Example
     /// ```ignore
-    /// use dlsite_gamebox::DlsiteClient;
+    /// use dlsite_rs::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {

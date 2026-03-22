@@ -14,13 +14,14 @@ pub struct ViewerAdapter<'a> {
 }
 
 impl<'a> ViewerAdapter<'a> {
+    #[allow(dead_code)]
     pub(crate) fn new(client: &'a DlsiteClient) -> Self {
         Self { client }
     }
 
     /// Get Play manifest token
     ///
-    /// GET https://play.dl.dlsite.com/api/v3/download/sign/cookie?workno=WORK_ID
+    /// GET <https://play.dl.dlsite.com/api/v3/download/sign/cookie?workno=WORK_ID>
     ///
     /// This endpoint returns a token required for streaming the work content.
     ///
@@ -43,7 +44,7 @@ impl<'a> ViewerAdapter<'a> {
 
     /// Create viewer session
     ///
-    /// POST https://play.dlsite.com/api/v3/viewer/token/{workno}
+    /// POST <https://play.dlsite.com/api/v3/viewer/token/{workno}>
     ///
     /// This endpoint creates a viewer session for streaming the work.
     ///
@@ -54,16 +55,14 @@ impl<'a> ViewerAdapter<'a> {
     /// Viewer session token and ///
     /// **Note:** This requires POST request support which is not yet implemented
     pub async fn create_viewer_session(&self, workno: &str) -> Result<ViewerSession> {
-        let url = format!(
-            "https://play.dlsite.com/api/v3/viewer/token/{}",
-            workno
-        );
+        let _url = format!("https://play.dlsite.com/api/v3/viewer/token/{}", workno);
 
         // Note: This requires POST with empty or specific body
         // For now, we'll return an error indicating this needs implementation
-        Err(DlsiteError::Parse(
-            format!("POST /api/v3/viewer/token/{} not yet implemented - requires POST support", workno),
-        ))
+        Err(DlsiteError::Parse(format!(
+            "POST /api/v3/viewer/token/{} not yet implemented - requires POST support",
+            workno
+        )))
     }
 }
 

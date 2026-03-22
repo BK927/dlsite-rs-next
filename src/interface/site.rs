@@ -4,11 +4,12 @@
 ///
 /// Each variant corresponds to a content segment on `https://www.dlsite.com/`.
 /// Use [`Site::base_url()`] to get the full base URL for that site.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum Site {
     /// General/home site (`/home`)
     Home,
     /// Adult doujin site (`/maniax`) — the default
+    #[default]
     Maniax,
     /// Books site (`/books`)
     Books,
@@ -24,18 +25,12 @@ pub enum Site {
     Custom(String),
 }
 
-impl Default for Site {
-    fn default() -> Self {
-        Site::Maniax
-    }
-}
-
 impl Site {
     /// Returns the full base URL for this site.
     ///
     /// # Examples
     /// ```
-    /// use dlsite_gamebox::interface::site::Site;
+    /// use dlsite_rs::interface::site::Site;
     /// assert_eq!(Site::Maniax.base_url(), "https://www.dlsite.com/maniax");
     /// assert_eq!(Site::Books.base_url(), "https://www.dlsite.com/books");
     /// ```

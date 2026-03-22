@@ -131,7 +131,10 @@ impl SearchProductQuery {
 mod tests {
     use crate::{
         client::search::SearchProductQuery,
-        interface::{product::FileType, query::{Language, SexCategory}},
+        interface::{
+            product::FileType,
+            query::{Language, SexCategory},
+        },
     };
 
     #[test]
@@ -165,7 +168,10 @@ mod tests {
             ..Default::default()
         }
         .to_path();
-        assert!(path.contains("/campaign/campaign"), "expected /campaign/campaign in {path}");
+        assert!(
+            path.contains("/campaign/campaign"),
+            "expected /campaign/campaign in {path}"
+        );
     }
 
     #[test]
@@ -175,7 +181,10 @@ mod tests {
             ..Default::default()
         }
         .to_path();
-        assert!(!path.contains("campaign"), "expected no campaign segment in {path}");
+        assert!(
+            !path.contains("campaign"),
+            "expected no campaign segment in {path}"
+        );
     }
 
     #[test]
@@ -185,7 +194,10 @@ mod tests {
             ..Default::default()
         }
         .to_path();
-        assert!(!path.contains("campaign"), "expected no campaign segment in {path}");
+        assert!(
+            !path.contains("campaign"),
+            "expected no campaign segment in {path}"
+        );
     }
 
     #[test]
@@ -195,7 +207,10 @@ mod tests {
             ..Default::default()
         }
         .to_path();
-        assert!(path.contains("/regist_date_start/2022-01-01"), "got: {path}");
+        assert!(
+            path.contains("/regist_date_start/2022-01-01"),
+            "got: {path}"
+        );
     }
 
     #[test]
@@ -225,7 +240,10 @@ mod tests {
             ..Default::default()
         }
         .to_path();
-        assert!(path.contains("/work_type_category_name[0]/ボイス・ASMR"), "got: {path}");
+        assert!(
+            path.contains("/work_type_category_name[0]/ボイス・ASMR"),
+            "got: {path}"
+        );
     }
 
     #[test]

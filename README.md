@@ -1,8 +1,39 @@
 # dlsite-rs
 
-This is a library to get information about products on DLsite. Some information
-is not available on the HTML page, so this library also makes requests to the
-AJAX API.
+[![crates.io](https://img.shields.io/crates/v/dlsite-rs.svg)](https://crates.io/crates/dlsite-rs)
+[![docs.rs](https://docs.rs/dlsite-rs/badge.svg)](https://docs.rs/dlsite-rs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A high-performance Rust client library for the [DLsite](https://www.dlsite.com/) platform,
+providing access to product information, search, circle data, and more.
+
+> **Stability**: This library is in early development (0.x). The public API may change between releases.
+> Features marked as "stub" or "requires feature flag" are not yet production-ready.
+
+## Installation
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+dlsite-rs = "0.2"
+```
+
+### Feature Flags
+
+| Feature | Description |
+|---------|-------------|
+| (default) | `unknown-field-log` + `reqwest-rustls-tls` |
+| `search-html` | HTML scraping-based search (adds `scraper`, `rayon`) |
+| `cookie-store` | Session/auth support (adds `reqwest/cookies`) |
+| `reqwest-native-tls` | Use native TLS instead of rustls |
+
+**TLS Backend**: By default, this crate uses `rustls` (pure Rust TLS). To use native TLS:
+
+```toml
+[dependencies]
+dlsite-rs = { version = "0.2", default-features = false, features = ["reqwest-native-tls", "unknown-field-log"] }
+```
 
 ## Performance
 
@@ -18,14 +49,6 @@ The library includes several performance optimizations that provide significant 
 | **Combined** | **10-100x** | **Typical usage** |
 
 See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
-
-## NOTE
-
-- This library is still wip, and the API may change.
-- Only the parts I needed are implemented, so there are many unimplemented
-  parts. PR is welcome.
-- Especially in the JSON API, the DLsite side may change the specification.
-  Expect breaking changes due to such changes.
 
 ## Implemented features
 
@@ -71,7 +94,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 - Get product by api
 
   ```rust,no_run
-  use dlsite_gamebox::DlsiteClient;
+  use dlsite_rs::DlsiteClient;
 
   #[tokio::main]
   async fn main() {
@@ -84,7 +107,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 - Get product thumbnail and screenshots
 
   ```rust,no_run
-  use dlsite_gamebox::DlsiteClient;
+  use dlsite_rs::DlsiteClient;
 
   #[tokio::main]
   async fn main() {
@@ -106,7 +129,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   **Note: Requires `search-html` feature flag**
 
   ```rust,ignore
-  use dlsite_gamebox::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
+  use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
 
   #[tokio::main]
   async fn main() {
@@ -131,7 +154,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   **Note: Requires `search-html` feature flag**
 
   ```rust,ignore
-  use dlsite_gamebox::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
+  use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
 
   #[tokio::main]
   async fn main() {
@@ -165,7 +188,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   **Note: Requires `search-html` feature flag**
 
   ```rust,ignore
-  use dlsite_gamebox::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
+  use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
 
   #[tokio::main]
   async fn main() {
@@ -191,7 +214,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   **Note: Requires `search-html` feature flag**
 
   ```rust,ignore
-  use dlsite_gamebox::DlsiteClient;
+  use dlsite_rs::DlsiteClient;
 
   #[tokio::main]
   async fn main() {
@@ -213,7 +236,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 - Custom client configuration
 
   ```rust,no_run
-  use dlsite_gamebox::{DlsiteClient, RetryConfig};
+  use dlsite_rs::{DlsiteClient, RetryConfig};
   use std::time::Duration;
 
   #[tokio::main]
@@ -227,10 +250,15 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
               Duration::from_millis(200),  // Initial delay 200ms
               Duration::from_secs(30),  // Max delay 30s
           ))
-          .build();
+          .build()
+          .expect("Failed to build client");
 
       // Use the custom client
       let product = client.product_api().get("RJ01014447").await.unwrap();
       println!("Product: {}", product.work_name);
   }
   ```
+
+## License
+
+Licensed under the MIT License. See \[LICENSE\](LICENSE) for details.

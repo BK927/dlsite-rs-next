@@ -8,7 +8,7 @@ use std::fs;
 use std::path::Path;
 use std::time::Duration;
 
-use dlsite_gamebox::retry::RetryConfig;
+use dlsite_rs::retry::RetryConfig;
 
 /// Load a fixture file from the tests/fixtures directory
 ///
@@ -17,6 +17,7 @@ use dlsite_gamebox::retry::RetryConfig;
 ///
 /// # Returns
 /// The contents of the fixture file as a String
+#[allow(dead_code)]
 pub fn load_fixture(path: &str) -> String {
     let fixture_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -34,6 +35,7 @@ pub fn load_fixture(path: &str) -> String {
 ///
 /// # Returns
 /// The parsed JSON value
+#[allow(dead_code)]
 pub fn load_json_fixture(path: &str) -> serde_json::Value {
     let content = load_fixture(path);
     serde_json::from_str(&content)

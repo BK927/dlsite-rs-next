@@ -27,6 +27,7 @@ use super::DlsiteClient;
 /// 4. Whether authentication is required.
 #[derive(Clone, Debug)]
 pub struct RankingClient<'a> {
+    #[allow(dead_code)]
     pub(crate) c: &'a DlsiteClient,
 }
 

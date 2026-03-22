@@ -18,7 +18,7 @@
 
 mod common;
 
-use dlsite_gamebox::{DlsiteClient, DlsiteError};
+use dlsite_rs::DlsiteClient;
 
 /// Check if live tests are enabled via environment variable
 fn live_tests_enabled() -> bool {
@@ -50,7 +50,10 @@ async fn live_get_product_rj403038() {
     let res = client.product().get_all("RJ403038").await.unwrap();
 
     assert_eq!(res.id, "RJ403038");
-    assert_eq!(res.title, "【ブルーアーカイブ】ユウカASMR～頑張るあなたのすぐそばに～");
+    assert_eq!(
+        res.title,
+        "【ブルーアーカイブ】ユウカASMR～頑張るあなたのすぐそばに～"
+    );
     assert_eq!(res.circle_name.as_deref(), Some("Yostar"));
     assert_eq!(res.circle_id.as_deref(), Some("RG62982"));
     assert!(res.sale_count.unwrap() > 50000);
@@ -65,7 +68,10 @@ async fn live_get_product_rj01017217() {
     let res = client.product().get_all("RJ01017217").await.unwrap();
 
     assert_eq!(res.id, "RJ01017217");
-    assert_eq!(res.title, "【イヤーキャンドル】道草屋-なつな3-たぬさんこんにちは【ずぶ濡れシャンプー】");
+    assert_eq!(
+        res.title,
+        "【イヤーキャンドル】道草屋-なつな3-たぬさんこんにちは【ずぶ濡れシャンプー】"
+    );
     assert_eq!(res.circle_name.as_deref(), Some("桃色CODE"));
     assert_eq!(res.circle_id.as_deref(), Some("RG24350"));
 }
@@ -83,7 +89,10 @@ async fn live_get_product_api_rj403038() {
     let res = client.product_api().get("RJ403038").await.unwrap();
 
     assert_eq!(res.workno, "RJ403038");
-    assert_eq!(res.work_name, "【ブルーアーカイブ】ユウカASMR～頑張るあなたのすぐそばに～");
+    assert_eq!(
+        res.work_name,
+        "【ブルーアーカイブ】ユウカASMR～頑張るあなたのすぐそばに～"
+    );
     assert_eq!(res.maker_name, "Yostar");
 }
 
@@ -96,7 +105,10 @@ async fn live_get_product_api_rj01017217() {
     let res = client.product_api().get("RJ01017217").await.unwrap();
 
     assert_eq!(res.workno, "RJ01017217");
-    assert_eq!(res.work_name, "【イヤーキャンドル】道草屋-なつな3-たぬさんこんにちは【ずぶ濡れシャンプー】");
+    assert_eq!(
+        res.work_name,
+        "【イヤーキャンドル】道草屋-なつな3-たぬさんこんにちは【ずぶ濡れシャンプー】"
+    );
     assert_eq!(res.maker_name, "桃色CODE");
 }
 
@@ -128,15 +140,21 @@ async fn live_get_product_api_not_found() {
 // =============================================================================
 
 #[tokio::test]
-#[ignore = "Live test - requires network and scraper feature. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke --features scraper -- --ignored"]
-#[cfg(feature = "scraper")]
+#[ignore = "Live test - requires network and search-html feature. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke --features search-html -- --ignored"]
+#[cfg(feature = "search-html")]
 async fn live_search_basic() {
+    use dlsite_rs::client::search::SearchProductQuery;
+
     skip_unless_live!();
 
     let client = DlsiteClient::default();
-    let results = client.search().query("ASMR").execute().await.unwrap();
+    let query = SearchProductQuery {
+        keyword: Some("ASMR".to_string()),
+        ..Default::default()
+    };
+    let results = client.search().search_product(&query).await.unwrap();
 
-    assert!(!results.is_empty());
+    assert!(!results.products.is_empty());
 }
 
 // =============================================================================
@@ -149,7 +167,10 @@ async fn live_raw_request_product_json() {
     skip_unless_live!();
 
     let client = DlsiteClient::default();
-    let body = client.get("/api/=/product.json?workno=RJ403038").await.unwrap();
+    let body = client
+        .get("/api/=/product.json?workno=RJ403038")
+        .await
+        .unwrap();
 
     // Should be valid JSON
     let json: serde_json::Value = serde_json::from_str(&body).unwrap();
@@ -161,8 +182,8 @@ async fn live_raw_request_product_json() {
 // Review API Tests
 // =============================================================================
 
-use dlsite_gamebox::client::product::review::ReviewSortOrder;
-use dlsite_gamebox::interface::query::Language;
+use dlsite_rs::client::product::review::ReviewSortOrder;
+use dlsite_rs::interface::query::Language;
 
 #[tokio::test]
 #[ignore = "Live test - requires network. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke -- --ignored"]
@@ -170,7 +191,11 @@ async fn live_get_review_basic() {
     skip_unless_live!();
 
     let client = DlsiteClient::default();
-    let review = client.product().get_review("RJ403038", 6, 1, true, ReviewSortOrder::New).await.unwrap();
+    let review = client
+        .product()
+        .get_review("RJ403038", 6, 1, true, ReviewSortOrder::New)
+        .await
+        .unwrap();
 
     assert!(review.is_success);
     // Popular product should have reviews
@@ -228,13 +253,17 @@ async fn live_get_reviewer_genre_list() {
     skip_unless_live!();
 
     let client = DlsiteClient::default();
-    let review = client.product().get_review("RJ403038", 6, 1, true, ReviewSortOrder::New).await.unwrap();
+    let review = client
+        .product()
+        .get_review("RJ403038", 6, 1, true, ReviewSortOrder::New)
+        .await
+        .unwrap();
 
     // Popular product should have reviewer genre breakdown
     assert!(review.reviewer_genre_list.is_some());
     let genres = review.reviewer_genre_list.unwrap();
     // Should have at least some genre data
-    assert!(!genres.is_empty() || review.review_list.is_empty() == false);
+    assert!(!genres.is_empty() || !review.review_list.is_empty());
 }
 
 // =============================================================================
@@ -265,7 +294,10 @@ async fn live_list_circle_games() {
         Err(e) => {
             // HTML parsing can fail if the site structure changes
             // Log the error but don't fail the test entirely
-            eprintln!("Warning: Circle games list failed (HTML structure may have changed): {:?}", e);
+            eprintln!(
+                "Warning: Circle games list failed (HTML structure may have changed): {:?}",
+                e
+            );
         }
     }
 }
@@ -287,7 +319,10 @@ async fn live_get_circle_profile() {
         }
         Err(e) => {
             // HTML parsing can fail if the site structure changes
-            eprintln!("Warning: Circle profile failed (HTML structure may have changed): {:?}", e);
+            eprintln!(
+                "Warning: Circle profile failed (HTML structure may have changed): {:?}",
+                e
+            );
         }
     }
 }
@@ -317,7 +352,11 @@ async fn live_product_api_all_locales() {
         let body = client.get(&path).await.unwrap();
         let json: serde_json::Value = serde_json::from_str(&body).unwrap();
         assert!(json.is_array(), "Locale {} should return array", locale_str);
-        assert!(!json.as_array().unwrap().is_empty(), "Locale {} should have data", locale_str);
+        assert!(
+            !json.as_array().unwrap().is_empty(),
+            "Locale {} should have data",
+            locale_str
+        );
     }
 }
 
@@ -329,7 +368,11 @@ async fn live_product_thumbnail_and_screenshots() {
     let client = DlsiteClient::default();
 
     // Get thumbnail
-    let thumbnail = client.product_api().get_product_thumbnail("RJ403038").await.unwrap();
+    let thumbnail = client
+        .product_api()
+        .get_product_thumbnail("RJ403038")
+        .await
+        .unwrap();
     // URL can be absolute (http://...) or protocol-relative (//...)
     assert!(
         thumbnail.starts_with("http") || thumbnail.starts_with("//"),
@@ -338,7 +381,11 @@ async fn live_product_thumbnail_and_screenshots() {
     );
 
     // Get screenshots
-    let screenshots = client.product_api().list_product_screenshots("RJ403038").await.unwrap();
+    let screenshots = client
+        .product_api()
+        .list_product_screenshots("RJ403038")
+        .await
+        .unwrap();
     // Screenshots may or may not exist, but should be a valid vector
     for screenshot in &screenshots {
         assert!(

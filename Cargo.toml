@@ -1,18 +1,27 @@
 [package]
-name = "dlsite-gamebox"
+name = "dlsite-rs"
 version = "0.2.0"
 edition = "2021"
+rust-version = "1.75"
 description = "High-performance DLsite client with caching, parallel parsing, and streaming support"
 license = "MIT"
-repository = "https://github.com/SuperToolman/dlsite-gamebox"
-authors = ["SuperToolman"]
-keywords = ["dlsite", "scraper", "api", "async", "performance"]
-categories = ["api-bindings"]
+repository = "https://github.com/BK927/dlsite-rs-next"
+documentation = "https://docs.rs/dlsite-rs"
+readme = "README.md"
+keywords = ["dlsite", "api", "async", "japan", "doujin"]
+categories = ["api-bindings", "web-programming::http-client"]
+include = [
+    "/src/**/*.rs",
+    "/Cargo.toml",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+]
 
 [dependencies]
-tokio = { version = "1", features = ["macros"] }
+tokio = { version = "1", features = ["macros", "time", "sync"] }
 chrono = { version = "0.4.39", features = ["serde"] }
-reqwest = { version = "0.12.9" }
+reqwest = { version = "0.12.9", default-features = false }
 
 serde = "1.0.216"
 serde-aux = "4.5.0"
@@ -44,7 +53,7 @@ wiremock = "0.6"
 insta = { version = "1.42", features = ["json"] }
 
 [features]
-default = ["unknown-field-log", "reqwest-default-tls"]
+default = ["unknown-field-log", "reqwest-rustls-tls"]
 
 ## Outputs log when unknown fields are found in response.
 unknown-field-log = ["dep:serde_ignored"]
@@ -57,15 +66,14 @@ cookie-store = ["reqwest/cookies"]
 ## This adds scraper and rayon dependencies.
 search-html = ["dep:scraper", "dep:rayon"]
 
-#! ### Reqwest features
-## Enables native-tls feature of reqwest.
-reqwest-default-tls = ["reqwest/default-tls"]
-## Enables native-tls feature of reqwest.
-reqwest-native-tls = ["reqwest/native-tls"]
-## Enables rustls-tls feature of reqwest.
+#! ### TLS Backend
+## Enables rustls-tls (pure Rust TLS implementation, recommended).
 reqwest-rustls-tls = ["reqwest/rustls-tls"]
+## Enables native-tls (platform's native TLS implementation).
+reqwest-native-tls = ["reqwest/native-tls"]
 
 document-features = ["dep:document-features"]
 
 [package.metadata.docs.rs]
-features = ["document-features"]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

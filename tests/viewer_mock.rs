@@ -9,11 +9,11 @@
 
 mod common;
 
-use dlsite_gamebox::adapters::viewer::{ManifestToken, ViewerSession};
-use dlsite_gamebox::{DlsiteClient, RetryConfig};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, query_param};
+use dlsite_rs::adapters::viewer::{ManifestToken, ViewerSession};
+use dlsite_rs::{DlsiteClient, RetryConfig};
 use std::time::Duration;
+use wiremock::matchers::{method, path, query_param};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 async fn setup_mock_server() -> (MockServer, DlsiteClient) {
     let mock_server = MockServer::start().await;
@@ -62,19 +62,24 @@ async fn test_get_manifest_token_success() {
     Mock::given(method("GET"))
         .and(path("/api/v3/download/sign/cookie"))
         .and(query_param("workno", "RJ403038"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            MANIFEST_TOKEN_SUCCESS,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(MANIFEST_TOKEN_SUCCESS, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
-    let url = format!("{}/api/v3/download/sign/cookie?workno=RJ403038", mock_server.uri());
+    let url = format!(
+        "{}/api/v3/download/sign/cookie?workno=RJ403038",
+        mock_server.uri()
+    );
     let body = client.get_raw(&url).await.unwrap();
     let token: ManifestToken = serde_json::from_str(&body).unwrap();
 
     assert_eq!(token.workno, Some("RJ403038".to_string()));
-    assert_eq!(token.manifest_url, Some("https://play.dl.dlsite.com/manifest/RJ403038.m3u8?token=abc123".to_string()));
+    assert_eq!(
+        token.manifest_url,
+        Some("https://play.dl.dlsite.com/manifest/RJ403038.m3u8?token=abc123".to_string())
+    );
     assert_eq!(token.token, Some("view_token_xyz".to_string()));
     assert_eq!(token.expires_at, Some("2024-01-15T12:00:00Z".to_string()));
     assert!(token.error.is_none());
@@ -87,19 +92,24 @@ async fn test_get_manifest_token_unavailable() {
     Mock::given(method("GET"))
         .and(path("/api/v3/download/sign/cookie"))
         .and(query_param("workno", "RJ999999"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            MANIFEST_TOKEN_UNAVAILABLE,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(MANIFEST_TOKEN_UNAVAILABLE, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
-    let url = format!("{}/api/v3/download/sign/cookie?workno=RJ999999", mock_server.uri());
+    let url = format!(
+        "{}/api/v3/download/sign/cookie?workno=RJ999999",
+        mock_server.uri()
+    );
     let body = client.get_raw(&url).await.unwrap();
     let token: ManifestToken = serde_json::from_str(&body).unwrap();
 
     assert_eq!(token.workno, Some("RJ999999".to_string()));
-    assert_eq!(token.error, Some("This work is not available for streaming".to_string()));
+    assert_eq!(
+        token.error,
+        Some("This work is not available for streaming".to_string())
+    );
     assert!(token.manifest_url.is_none());
     assert!(token.token.is_none());
 }
@@ -111,14 +121,16 @@ async fn test_get_manifest_token_minimal() {
     Mock::given(method("GET"))
         .and(path("/api/v3/download/sign/cookie"))
         .and(query_param("workno", "RJ123456"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            MANIFEST_TOKEN_MINIMAL,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(MANIFEST_TOKEN_MINIMAL, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
-    let url = format!("{}/api/v3/download/sign/cookie?workno=RJ123456", mock_server.uri());
+    let url = format!(
+        "{}/api/v3/download/sign/cookie?workno=RJ123456",
+        mock_server.uri()
+    );
     let body = client.get_raw(&url).await.unwrap();
     let token: ManifestToken = serde_json::from_str(&body).unwrap();
 
@@ -145,7 +157,10 @@ async fn test_get_manifest_token_401_returns_body() {
         .mount(&mock_server)
         .await;
 
-    let url = format!("{}/api/v3/download/sign/cookie?workno=RJ403038", mock_server.uri());
+    let url = format!(
+        "{}/api/v3/download/sign/cookie?workno=RJ403038",
+        mock_server.uri()
+    );
     let body = client.get_raw(&url).await.unwrap();
 
     assert_eq!(body, "Unauthorized");
@@ -162,7 +177,10 @@ async fn test_get_manifest_token_403_returns_body() {
         .mount(&mock_server)
         .await;
 
-    let url = format!("{}/api/v3/download/sign/cookie?workno=RJ403038", mock_server.uri());
+    let url = format!(
+        "{}/api/v3/download/sign/cookie?workno=RJ403038",
+        mock_server.uri()
+    );
     let body = client.get_raw(&url).await.unwrap();
 
     assert_eq!(body, "Forbidden");
@@ -182,10 +200,9 @@ async fn test_get_manifest_token_429_with_retry() {
     Mock::given(method("GET"))
         .and(path("/api/v3/download/sign/cookie"))
         .and(query_param("workno", "RJ403038"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            MANIFEST_TOKEN_SUCCESS,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(MANIFEST_TOKEN_SUCCESS, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
@@ -198,7 +215,10 @@ async fn test_get_manifest_token_429_with_retry() {
         .mount(&mock_server)
         .await;
 
-    let url = format!("{}/api/v3/download/sign/cookie?workno=RJ403038", mock_server.uri());
+    let url = format!(
+        "{}/api/v3/download/sign/cookie?workno=RJ403038",
+        mock_server.uri()
+    );
     let body = client.get_raw(&url).await.unwrap();
     let token: ManifestToken = serde_json::from_str(&body).unwrap();
 
@@ -215,10 +235,9 @@ async fn test_get_manifest_token_500_with_retry() {
     Mock::given(method("GET"))
         .and(path("/api/v3/download/sign/cookie"))
         .and(query_param("workno", "RJ403038"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            MANIFEST_TOKEN_SUCCESS,
-            "application/json",
-        ))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(MANIFEST_TOKEN_SUCCESS, "application/json"),
+        )
         .mount(&mock_server)
         .await;
 
@@ -231,7 +250,10 @@ async fn test_get_manifest_token_500_with_retry() {
         .mount(&mock_server)
         .await;
 
-    let url = format!("{}/api/v3/download/sign/cookie?workno=RJ403038", mock_server.uri());
+    let url = format!(
+        "{}/api/v3/download/sign/cookie?workno=RJ403038",
+        mock_server.uri()
+    );
     let body = client.get_raw(&url).await.unwrap();
     let token: ManifestToken = serde_json::from_str(&body).unwrap();
 
@@ -254,7 +276,10 @@ fn test_manifest_token_parsing_full() {
     let token: ManifestToken = serde_json::from_str(json).unwrap();
 
     assert_eq!(token.workno, Some("RJ403038".to_string()));
-    assert_eq!(token.manifest_url, Some("https://example.com/manifest.m3u8".to_string()));
+    assert_eq!(
+        token.manifest_url,
+        Some("https://example.com/manifest.m3u8".to_string())
+    );
     assert_eq!(token.token, Some("token123".to_string()));
     assert_eq!(token.expires_at, Some("2024-01-15T12:00:00Z".to_string()));
     assert!(token.error.is_none());
@@ -301,7 +326,10 @@ fn test_viewer_session_parsing_full() {
 
     assert_eq!(session.workno, "RJ403038");
     assert_eq!(session.token, Some("session_token_abc".to_string()));
-    assert_eq!(session.viewer_url, Some("https://play.dlsite.com/viewer/RJ403038".to_string()));
+    assert_eq!(
+        session.viewer_url,
+        Some("https://play.dlsite.com/viewer/RJ403038".to_string())
+    );
     assert_eq!(session.expires_at, Some("2024-01-15T13:00:00Z".to_string()));
     assert_eq!(session.is_valid, Some(true));
     assert!(session.error.is_none());

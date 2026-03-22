@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use super::product_api::interface::{Creator, Creators, GenreApi};
 use crate::{
     error::Result,
     interface::genre::Genre,
@@ -12,7 +13,6 @@ use crate::{
 };
 use ajax::ProductAjax;
 use chrono::NaiveDate;
-use super::product_api::interface::{Creators, Creator, GenreApi};
 
 pub mod ajax;
 pub mod review;
@@ -69,10 +69,18 @@ pub struct ProductPeople {
 impl From<Creators> for ProductPeople {
     fn from(creators: Creators) -> Self {
         Self {
-            author: creators.created_by.map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
-            scenario: creators.scenario_by.map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
-            illustrator: creators.illust_by.map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
-            voice_actor: creators.voice_by.map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
+            author: creators
+                .created_by
+                .map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
+            scenario: creators
+                .scenario_by
+                .map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
+            illustrator: creators
+                .illust_by
+                .map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
+            voice_actor: creators
+                .voice_by
+                .map(|v: Vec<Creator>| v.into_iter().map(|c: Creator| c.name).collect()),
         }
     }
 }
@@ -97,7 +105,7 @@ impl<'a> ProductClient<'a> {
     ///
     /// # Example
     /// ```no_run
-    /// use dlsite_gamebox::DlsiteClient;
+    /// use dlsite_rs::DlsiteClient;
     /// #[tokio::main]
     /// async fn main() {
     ///     let client = DlsiteClient::default();
@@ -112,17 +120,18 @@ impl<'a> ProductClient<'a> {
         let api_future = product_api_client.get(product_id);
         let review_future = self.get_review(product_id, 6, 1, true, review::ReviewSortOrder::New);
 
-        let (ajax_data, api_data, review_data) = tokio::try_join!(
-            ajax_future,
-            api_future,
-            review_future
-        )?;
+        let (ajax_data, api_data, review_data) =
+            tokio::try_join!(ajax_future, api_future, review_future)?;
 
         // Convert genres from API format
-        let genre: Vec<Genre> = api_data.genres.into_iter().map(|g: GenreApi| Genre {
-            name: g.name,
-            id: g.id.to_string(),
-        }).collect();
+        let genre: Vec<Genre> = api_data
+            .genres
+            .into_iter()
+            .map(|g: GenreApi| Genre {
+                name: g.name,
+                id: g.id.to_string(),
+            })
+            .collect();
 
         // Convert creators to ProductPeople
         let people = api_data.creators.map(ProductPeople::from);
@@ -186,7 +195,7 @@ impl<'a> ProductClient<'a> {
 
     /// Get product reviews and related informations using 'review api'.
     ///
-    /// Uses Japanese locale (`ja_JP`). For other locales, use [`get_review_with_locale`].
+    /// Uses Japanese locale (`ja_JP`). For other locales, use [`Self::get_review_with_locale`].
     ///
     /// # Arguments
     /// * `product_id` - Product ID.
@@ -239,7 +248,12 @@ impl<'a> ProductClient<'a> {
 
         let path = format!(
             "/api/review?product_id={}&limit={}&mix_pickup={}&page={}&order={}&locale={}",
-            product_id, limit, mix_pickup, page, order_str, locale.to_review_locale()
+            product_id,
+            limit,
+            mix_pickup,
+            page,
+            order_str,
+            locale.to_review_locale()
         );
         let json_str = self.c.get(&path).await?;
         let json: serde_json::Value = serde_json::from_str(&json_str)?;
