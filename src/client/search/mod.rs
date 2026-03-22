@@ -37,7 +37,7 @@ pub use self::query::SearchProductQuery;
 ///
 /// Enable it in your `Cargo.toml`:
 /// ```toml
-/// dlsite-gamebox = { version = "0.2", features = ["search-html"] }
+/// dlsite-rs = { version = "0.2", features = ["search-html"] }
 /// ```
 pub struct SearchClient<'a> {
     pub(crate) c: &'a DlsiteClient,

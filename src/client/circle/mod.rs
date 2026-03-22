@@ -74,7 +74,7 @@ pub struct CircleProfile {
 ///
 /// Enable it in your `Cargo.toml`:
 /// ```toml
-/// dlsite-gamebox = { version = "0.2", features = ["search-html"] }
+/// dlsite-rs = { version = "0.2", features = ["search-html"] }
 /// ```
 #[derive(Clone, Debug)]
 pub struct CircleClient<'a> {

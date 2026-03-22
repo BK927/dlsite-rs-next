@@ -11,7 +11,7 @@
 //! This module is only available with the `cookie-store` feature:
 //! ```toml
 //! [dependencies]
-//! dlsite-gamebox = { features = ["cookie-store"] }
+//! dlsite-rs = { features = ["cookie-store"] }
 //! ```
 
 use super::DlsiteClient;

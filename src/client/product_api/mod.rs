@@ -66,7 +66,7 @@ impl<'a> ProductApiClient<'a> {
         let result: std::result::Result<Vec<ProductApiContent>, _> = serde_ignored::deserialize(
             jd,
             |path| {
-                tracing::error!("Ignored path: '{}' for '{id}'. Please report this to https://github.com/SuperToolman/dlsite-gamebox", path.to_string());
+                tracing::error!("Ignored path: '{}' for '{id}'. Please report this to https://github.com/BK927/dlsite-rs-next", path.to_string());
             },
         );
         #[cfg(not(feature = "unknown-field-log"))]
