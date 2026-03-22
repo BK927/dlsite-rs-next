@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+#### Product API Helpers
+- `ProductApiClient::get_product_thumbnail(product_id)` — returns thumbnail URL from product API
+- `ProductApiClient::list_product_screenshots(product_id)` — returns list of screenshot URLs from product API
+
+#### Circle Client Enhancements
+- `CircleClient::list_circle_games(maker_id)` — lists only game-type products from a circle (requires `search-html` feature)
+- `CircleClient::resolve_circle_name(circle_name)` — resolves circle name to maker_id via bucket page scraping (requires `search-html` feature)
+
+#### Work Type Helpers
+- `WorkType::is_game()` — returns `true` for game work types (ACN, QIZ, ADV, RPG, TBL, DNV, SLN, TYP, STG, PZL, ETC)
+
+#### Documentation
+- Updated `docs/dlsite_endpoint_inventory.md` to reflect implemented capabilities
+- Updated `docs/dlsite_gap_analysis.md` with new implemented features
+- Updated `README.md` with examples for new features
+
 ## [0.3.0] - 2026-03-20
 
 ### Added

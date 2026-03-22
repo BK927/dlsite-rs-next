@@ -128,6 +128,32 @@ fn test_work_type_case_sensitive() {
     }
 }
 
+#[test]
+fn test_work_type_is_game() {
+    // Game types should return true
+    assert!(WorkType::ACN.is_game()); // Action
+    assert!(WorkType::QIZ.is_game()); // Quiz
+    assert!(WorkType::ADV.is_game()); // Adventure
+    assert!(WorkType::RPG.is_game()); // RPG
+    assert!(WorkType::TBL.is_game()); // Table
+    assert!(WorkType::DNV.is_game()); // Digital Novel
+    assert!(WorkType::SLN.is_game()); // Simulation
+    assert!(WorkType::TYP.is_game()); // Typing
+    assert!(WorkType::STG.is_game()); // Shooting
+    assert!(WorkType::PZL.is_game()); // Puzzle
+    assert!(WorkType::ETC.is_game()); // Other Games
+
+    // Non-game types should return false
+    assert!(!WorkType::MNG.is_game()); // Manga
+    assert!(!WorkType::ICG.is_game()); // CG/Illustrations
+    assert!(!WorkType::SOU.is_game()); // Voice/ASMR
+    assert!(!WorkType::MUS.is_game()); // Music
+    assert!(!WorkType::MOV.is_game()); // Video
+    assert!(!WorkType::TOL.is_game()); // Tools
+    assert!(!WorkType::ET3.is_game()); // Miscellaneous
+    assert!(!WorkType::Unknown("XYZ".to_string()).is_game());
+}
+
 // =============================================================================
 // Endpoint Builder Tests
 // =============================================================================

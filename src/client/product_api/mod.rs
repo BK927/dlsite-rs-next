@@ -82,4 +82,59 @@ impl<'a> ProductApiClient<'a> {
             Err(e) => Err(DlsiteError::Parse(format!("Failed to parse json: {}", e))),
         }
     }
+
+    /// Get the thumbnail URL for a product.
+    ///
+    /// # Arguments
+    /// * `id` - Product ID.
+    ///
+    /// # Returns
+    /// * `String` - URL to the product's thumbnail image.
+    ///
+    /// # Example
+    /// ```no_run
+    /// use dlsite_gamebox::DlsiteClient;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let client = DlsiteClient::default();
+    ///     let thumbnail_url = client.product_api().get_product_thumbnail("RJ01014447").await.unwrap();
+    ///     println!("Thumbnail: {}", thumbnail_url);
+    /// }
+    /// ```
+    pub async fn get_product_thumbnail(&self, id: &str) -> Result<String> {
+        let product = self.get(id).await?;
+        Ok(product.image_thum.url)
+    }
+
+    /// List all screenshot URLs for a product.
+    ///
+    /// # Arguments
+    /// * `id` - Product ID.
+    ///
+    /// # Returns
+    /// * `Vec<String>` - List of screenshot URLs. Empty if no samples available.
+    ///
+    /// # Example
+    /// ```no_run
+    /// use dlsite_gamebox::DlsiteClient;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let client = DlsiteClient::default();
+    ///     let screenshots = client.product_api().list_product_screenshots("RJ01014447").await.unwrap();
+    ///     for url in screenshots {
+    ///         println!("Screenshot: {}", url);
+    ///     }
+    /// }
+    /// ```
+    pub async fn list_product_screenshots(&self, id: &str) -> Result<Vec<String>> {
+        let product = self.get(id).await?;
+        Ok(product
+            .image_samples
+            .unwrap_or_default()
+            .into_iter()
+            .map(|file| file.url)
+            .collect())
+    }
 }

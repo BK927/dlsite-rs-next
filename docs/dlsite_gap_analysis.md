@@ -1,6 +1,6 @@
 # DLsite Library Gap Analysis
 
-Categorizes all features by implementation state as of v0.3.0.
+Categorizes all features by implementation state as of v0.2.0.
 
 ---
 
@@ -10,9 +10,14 @@ Categorizes all features by implementation state as of v0.3.0.
 - Product AJAX details (`ProductClient::get_ajax`, `get_ajax_multiple`)
 - Product review fetch (`ProductClient::get_review`, `get_review_with_locale`)
 - Product API JSON fetch (`ProductApiClient::get`, `get_with_locale`)
+- **Product thumbnail** (`ProductApiClient::get_product_thumbnail`)
+- **Product screenshots** (`ProductApiClient::list_product_screenshots`)
 - Search with full parameter set (`SearchClient::search_product`, `search_products_batch`, `search_product_stream`)
 - Circle product listing (`CircleClient::get_circle`)
 - Circle profile metadata (`CircleClient::get_circle_profile`)
+- **Circle game listing** (`CircleClient::list_circle_games`) - filters to game work types only
+- **Circle name resolution** (`CircleClient::resolve_circle_name`) - resolves circle name to maker_id
+- **Work type game check** (`WorkType::is_game()`) - helper to check if work type is a game
 - Response caching (LRU, configurable TTL)
 - Rate limiting (500ms between requests)
 - Retry with exponential backoff
@@ -36,6 +41,12 @@ Categorizes all features by implementation state as of v0.3.0.
 - **Login / Auth**: Referenced in README. `AuthClient` stub exists behind `cookie-store` feature gate. No actual login flow implemented.
 - **DLsite Play streaming**: `PlayClient` stub exists behind `cookie-store` feature gate. Not implemented.
 - **User library / purchases**: `UserClient` stub behind `cookie-store` feature gate. Not implemented.
+
+> **Note**: The following capabilities from `dlsite_endpoint_inventory.md` are now implemented:
+> - `resolve_circle_name` → `CircleClient::resolve_circle_name()`
+> - `list_circle_games` → `CircleClient::list_circle_games()`
+> - `get_product_thumbnail` → `ProductApiClient::get_product_thumbnail()`
+> - `list_product_screenshots` → `ProductApiClient::list_product_screenshots()`
 
 ---
 

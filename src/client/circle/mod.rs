@@ -6,7 +6,7 @@ mod query;
 use scraper::{Html, Selector};
 
 use super::{
-    search::SearchResult,
+    search::{SearchProductItem, SearchResult},
     DlsiteClient,
 };
 use crate::error::Result;
@@ -14,6 +14,48 @@ use crate::error::Result;
 use crate::utils::ToParseError as _;
 
 pub use self::query::CircleQuery;
+
+/// Determine the name bucket for circle name resolution.
+///
+/// DLsite organizes circles by the first character of their name:
+/// - Hiragana (あ-わ) → bucket by first character
+/// - Katakana (ア-ワ) → bucket by first character
+/// - Alphabetic (A-Z) → bucket is "a"
+/// - Numeric (0-9) → bucket is "0"
+fn get_name_bucket(name: &str) -> &'static str {
+    let first_char = name.chars().next().unwrap_or('a');
+
+    // Hiragana ranges
+    match first_char {
+        'あ'..='お' => "あ",
+        'か'..='ご' => "か",
+        'さ'..='ぞ' => "さ",
+        'た'..='ど' => "た",
+        'な'..='の' => "な",
+        'は'..='ぽ' => "は",
+        'ま'..='も' => "ま",
+        'や' | 'ゆ' | 'よ' => "や",
+        'ら'..='ろ' => "ら",
+        'わ'..='ん' => "わ",
+        // Katakana ranges
+        'ア'..='オ' => "ア",
+        'カ'..='ゴ' => "カ",
+        'サ'..='ゾ' => "サ",
+        'タ'..='ド' => "タ",
+        'ナ'..='ノ' => "ナ",
+        'ハ'..='ポ' => "ハ",
+        'マ'..='モ' => "マ",
+        'ヤ' | 'ユ' | 'ヨ' => "ヤ",
+        'ラ'..='ロ' => "ラ",
+        'ワ'..='ン' => "ワ",
+        // Alphabetic
+        'a'..='z' | 'A'..='Z' => "a",
+        // Numeric
+        '0'..='9' => "0",
+        // Default to "a" for other characters
+        _ => "a",
+    }
+}
 
 /// Basic profile metadata for a DLsite circle (maker).
 ///
@@ -118,5 +160,97 @@ impl<'a> CircleClient<'a> {
             count,
             query_path,
         })
+    }
+
+    /// List all games from a circle, filtering out non-game works.
+    ///
+    /// **Requires `search-html` feature flag.**
+    ///
+    /// Game work types include: Action (ACN), Quiz (QIZ), Adventure (ADV),
+    /// RPG, Table (TBL), Digital Novel (DNV), Simulation (SLN),
+    /// Typing (TYP), Shooting (STG), Puzzle (PZL), and Other Games (ETC).
+    ///
+    /// # Arguments
+    /// * `maker_id` - The circle/maker ID. Example: `RG24350`.
+    ///
+    /// # Returns
+    /// `Vec<SearchProductItem>` containing only game-type products.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use dlsite_gamebox::DlsiteClient;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let client = DlsiteClient::default();
+    ///     let games = client.circle().list_circle_games("RG24350").await.unwrap();
+    ///     for game in games {
+    ///         println!("{}: {}", game.id, game.title);
+    ///     }
+    /// }
+    /// ```
+    #[cfg(feature = "search-html")]
+    pub async fn list_circle_games(&self, maker_id: &str) -> Result<Vec<SearchProductItem>> {
+        let result = self.get_circle(maker_id, &CircleQuery::default()).await?;
+        Ok(result
+            .products
+            .into_iter()
+            .filter(|p| p.work_type.is_game())
+            .collect())
+    }
+
+    /// Resolve a circle name to its maker ID.
+    ///
+    /// **Requires `search-html` feature flag.**
+    ///
+    /// This method scrapes the DLsite circle list page to find a circle
+    /// by its exact name and returns the maker ID if found.
+    ///
+    /// # Arguments
+    /// * `circle_name` - The exact circle name to search for.
+    ///
+    /// # Returns
+    /// * `Some(String)` - The maker ID if the circle is found.
+    /// * `None` - If no circle matches the exact name.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use dlsite_gamebox::DlsiteClient;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let client = DlsiteClient::default();
+    ///     if let Some(maker_id) = client.circle().resolve_circle_name("Example Circle").await.unwrap() {
+    ///         println!("Found maker ID: {}", maker_id);
+    ///     }
+    /// }
+    /// ```
+    #[cfg(feature = "search-html")]
+    pub async fn resolve_circle_name(&self, circle_name: &str) -> Result<Option<String>> {
+        let bucket = get_name_bucket(circle_name);
+        let path = format!("/home/circle/list/=/name_header/{}", bucket);
+        let html = self.c.get(&path).await?;
+        let html = Html::parse_document(&html);
+
+        // Find the circle link with matching name
+        let selector = Selector::parse(".circle_list a, .maker_list a").unwrap();
+        for element in html.select(&selector) {
+            if let Some(name) = element.text().next() {
+                if name.trim() == circle_name {
+                    if let Some(href) = element.value().attr("href") {
+                        // Extract maker_id from URL like /circle/profile/=/maker_id/RG12345.html
+                        if let Some(maker_id) = href
+                            .split('/')
+                            .next_back()
+                            .and_then(|s| s.strip_suffix(".html"))
+                        {
+                            return Ok(Some(maker_id.to_string()));
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(None)
     }
 }

@@ -140,6 +140,30 @@ pub enum WorkType {
     Unknown(String),
 }
 
+impl WorkType {
+    /// Check if this work type is a game.
+    ///
+    /// Game work types include: Action (ACN), Quiz (QIZ), Adventure (ADV),
+    /// RPG, Table (TBL), Digital Novel (DNV), Simulation (SLN),
+    /// Typing (TYP), Shooting (STG), Puzzle (PZL), and Other Games (ETC).
+    pub fn is_game(&self) -> bool {
+        matches!(
+            self,
+            WorkType::ACN
+                | WorkType::QIZ
+                | WorkType::ADV
+                | WorkType::RPG
+                | WorkType::TBL
+                | WorkType::DNV
+                | WorkType::SLN
+                | WorkType::TYP
+                | WorkType::STG
+                | WorkType::PZL
+                | WorkType::ETC
+        )
+    }
+}
+
 /// Age category
 #[derive(Display, Debug, Clone, PartialEq, Deserialize_repr, Serialize_repr)]
 #[repr(u16)]

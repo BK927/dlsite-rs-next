@@ -36,12 +36,17 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
         (HTML scraping still uses Japanese page; locale applies to review and API calls)
 - [x] Get product review (with locale support via `get_review_with_locale`)
 - [x] Get product information using api (with locale support via `get_with_locale`)
+- [x] Get product thumbnail (`ProductApiClient::get_product_thumbnail`)
+- [x] Get product screenshots (`ProductApiClient::list_product_screenshots`)
 - [x] Search product (all documented parameters now implemented)
 - [x] Site abstraction via `Site` enum (`Maniax`, `Books`, `Soft`, `Pro`, `Appx`, `Comic`, `Home`, `Custom`)
-- [ ] Get circle info
+- [x] Get circle info
   - [x] Get circle product list
   - [x] Get circle profile metadata (`get_circle_profile`)
+  - [x] Get circle games only (`CircleClient::list_circle_games`)
+  - [x] Resolve circle name to maker_id (`CircleClient::resolve_circle_name`)
   - [ ] Get circle sale list (needs network capture)
+- [x] Work type helpers (`WorkType::is_game()`)
 - [ ] Login and user related feature (stubs behind `cookie-store` feature)
 - [ ] Get ranking (stub — endpoint URL needs network capture verification)
 
@@ -73,6 +78,27 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
       let client = DlsiteClient::default();
       let product = client.product_api().get("RJ01014447").await.unwrap();
       assert_eq!(product.creators.unwrap().voice_by.unwrap()[0].name, "佐倉綾音");
+  }
+  ```
+
+- Get product thumbnail and screenshots
+
+  ```rust,no_run
+  use dlsite_gamebox::DlsiteClient;
+
+  #[tokio::main]
+  async fn main() {
+      let client = DlsiteClient::default();
+
+      // Get thumbnail URL
+      let thumbnail = client.product_api().get_product_thumbnail("RJ01014447").await.unwrap();
+      println!("Thumbnail: {}", thumbnail);
+
+      // Get screenshot URLs
+      let screenshots = client.product_api().list_product_screenshots("RJ01014447").await.unwrap();
+      for url in screenshots {
+          println!("Screenshot: {}", url);
+      }
   }
   ```
 
@@ -158,6 +184,29 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
           .expect("Failed to search");
 
       println!("Total items: {}", total);
+  }
+  ```
+
+- Get circle games and resolve circle name
+  **Note: Requires `search-html` feature flag**
+
+  ```rust,ignore
+  use dlsite_gamebox::DlsiteClient;
+
+  #[tokio::main]
+  async fn main() {
+      let client = DlsiteClient::default();
+
+      // List all games from a circle (filters out non-game works)
+      let games = client.circle().list_circle_games("RG24350").await.unwrap();
+      for game in games {
+          println!("{}: {}", game.id, game.title);
+      }
+
+      // Resolve circle name to maker_id
+      if let Some(maker_id) = client.circle().resolve_circle_name("Circle Name").await.unwrap() {
+          println!("Found maker ID: {}", maker_id);
+      }
   }
   ```
 
