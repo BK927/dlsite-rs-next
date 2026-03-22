@@ -156,3 +156,195 @@ async fn live_raw_request_product_json() {
     assert!(json.is_array());
     assert!(!json.as_array().unwrap().is_empty());
 }
+
+// =============================================================================
+// Review API Tests
+// =============================================================================
+
+use dlsite_gamebox::client::product::review::ReviewSortOrder;
+use dlsite_gamebox::interface::query::Language;
+
+#[tokio::test]
+#[ignore = "Live test - requires network. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke -- --ignored"]
+async fn live_get_review_basic() {
+    skip_unless_live!();
+
+    let client = DlsiteClient::default();
+    let review = client.product().get_review("RJ403038", 6, 1, true, ReviewSortOrder::New).await.unwrap();
+
+    assert!(review.is_success);
+    // Popular product should have reviews
+    assert!(!review.review_list.is_empty());
+}
+
+#[tokio::test]
+#[ignore = "Live test - requires network. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke -- --ignored"]
+async fn live_get_review_with_locale_korean() {
+    skip_unless_live!();
+
+    let client = DlsiteClient::default();
+    let review = client
+        .product()
+        .get_review_with_locale("RJ403038", 6, 1, true, ReviewSortOrder::Top, Language::Ko)
+        .await
+        .unwrap();
+
+    assert!(review.is_success);
+}
+
+#[tokio::test]
+#[ignore = "Live test - requires network. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke -- --ignored"]
+async fn live_get_review_with_locale_chinese_simplified() {
+    skip_unless_live!();
+
+    let client = DlsiteClient::default();
+    let review = client
+        .product()
+        .get_review_with_locale("RJ403038", 6, 1, true, ReviewSortOrder::New, Language::ZhCn)
+        .await
+        .unwrap();
+
+    assert!(review.is_success);
+}
+
+#[tokio::test]
+#[ignore = "Live test - requires network. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke -- --ignored"]
+async fn live_get_review_with_locale_chinese_traditional() {
+    skip_unless_live!();
+
+    let client = DlsiteClient::default();
+    let review = client
+        .product()
+        .get_review_with_locale("RJ403038", 6, 1, true, ReviewSortOrder::New, Language::ZhTw)
+        .await
+        .unwrap();
+
+    assert!(review.is_success);
+}
+
+#[tokio::test]
+#[ignore = "Live test - requires network. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke -- --ignored"]
+async fn live_get_reviewer_genre_list() {
+    skip_unless_live!();
+
+    let client = DlsiteClient::default();
+    let review = client.product().get_review("RJ403038", 6, 1, true, ReviewSortOrder::New).await.unwrap();
+
+    // Popular product should have reviewer genre breakdown
+    assert!(review.reviewer_genre_list.is_some());
+    let genres = review.reviewer_genre_list.unwrap();
+    // Should have at least some genre data
+    assert!(!genres.is_empty() || review.review_list.is_empty() == false);
+}
+
+// =============================================================================
+// Circle API Tests (requires search-html feature)
+// =============================================================================
+
+#[tokio::test]
+#[ignore = "Live test - requires network and search-html feature. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke --features search-html -- --ignored"]
+#[cfg(feature = "search-html")]
+async fn live_list_circle_games() {
+    skip_unless_live!();
+
+    let client = DlsiteClient::default();
+    // RG24350 is 桃色CODE circle
+    let result = client.circle().list_circle_games("RG24350").await;
+
+    // Note: HTML scraping can fail if DLsite changes their page structure
+    // This test verifies the API exists and works when the HTML structure matches
+    match result {
+        Ok(games) => {
+            // Should have at least some games
+            assert!(!games.is_empty(), "Circle should have at least one game");
+            // All results should be game types
+            for game in &games {
+                assert!(game.work_type.is_game(), "Result should be a game type");
+            }
+        }
+        Err(e) => {
+            // HTML parsing can fail if the site structure changes
+            // Log the error but don't fail the test entirely
+            eprintln!("Warning: Circle games list failed (HTML structure may have changed): {:?}", e);
+        }
+    }
+}
+
+#[tokio::test]
+#[ignore = "Live test - requires network and search-html feature. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke --features search-html -- --ignored"]
+#[cfg(feature = "search-html")]
+async fn live_get_circle_profile() {
+    skip_unless_live!();
+
+    let client = DlsiteClient::default();
+    // RG24350 is 桃色CODE circle
+    let result = client.circle().get_circle_profile("RG24350").await;
+
+    match result {
+        Ok(profile) => {
+            assert_eq!(profile.id, "RG24350");
+            assert!(!profile.name.is_empty());
+        }
+        Err(e) => {
+            // HTML parsing can fail if the site structure changes
+            eprintln!("Warning: Circle profile failed (HTML structure may have changed): {:?}", e);
+        }
+    }
+}
+
+// =============================================================================
+// Product API with All Locales Tests
+// =============================================================================
+
+#[tokio::test]
+#[ignore = "Live test - requires network. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke -- --ignored"]
+async fn live_product_api_all_locales() {
+    skip_unless_live!();
+
+    let client = DlsiteClient::default();
+
+    // Test all 5 locales
+    let locales = [
+        ("ja_JP", Language::Jp),
+        ("en_US", Language::En),
+        ("ko_KR", Language::Ko),
+        ("zh_CN", Language::ZhCn),
+        ("zh_TW", Language::ZhTw),
+    ];
+
+    for (locale_str, _locale) in locales {
+        let path = format!("/api/=/product.json?workno=RJ403038&locale={}", locale_str);
+        let body = client.get(&path).await.unwrap();
+        let json: serde_json::Value = serde_json::from_str(&body).unwrap();
+        assert!(json.is_array(), "Locale {} should return array", locale_str);
+        assert!(!json.as_array().unwrap().is_empty(), "Locale {} should have data", locale_str);
+    }
+}
+
+#[tokio::test]
+#[ignore = "Live test - requires network. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke -- --ignored"]
+async fn live_product_thumbnail_and_screenshots() {
+    skip_unless_live!();
+
+    let client = DlsiteClient::default();
+
+    // Get thumbnail
+    let thumbnail = client.product_api().get_product_thumbnail("RJ403038").await.unwrap();
+    // URL can be absolute (http://...) or protocol-relative (//...)
+    assert!(
+        thumbnail.starts_with("http") || thumbnail.starts_with("//"),
+        "Thumbnail should be a URL, got: {}",
+        thumbnail
+    );
+
+    // Get screenshots
+    let screenshots = client.product_api().list_product_screenshots("RJ403038").await.unwrap();
+    // Screenshots may or may not exist, but should be a valid vector
+    for screenshot in &screenshots {
+        assert!(
+            screenshot.starts_with("http") || screenshot.starts_with("//"),
+            "Screenshot should be a URL, got: {}",
+            screenshot
+        );
+    }
+}

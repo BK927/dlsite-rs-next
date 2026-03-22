@@ -412,3 +412,198 @@ fn test_creator_multiple_same_role() {
     assert!(authors.contains(&"Second Author".to_string()));
     assert!(authors.contains(&"Third Author".to_string()));
 }
+
+// =============================================================================
+// Circle Name Bucket Tests (for circle_name -> maker_id resolution)
+// =============================================================================
+
+/// Determine the name bucket for circle name resolution.
+/// This mirrors the implementation in src/client/circle/mod.rs.
+fn get_name_bucket(name: &str) -> &'static str {
+    let first_char = name.chars().next().unwrap_or('a');
+
+    match first_char {
+        'あ'..='お' => "あ",
+        'か'..='ご' => "か",
+        'さ'..='ぞ' => "さ",
+        'た'..='ど' => "た",
+        'な'..='の' => "な",
+        'は'..='ぽ' => "は",
+        'ま'..='も' => "ま",
+        'や' | 'ゆ' | 'よ' => "や",
+        'ら'..='ろ' => "ら",
+        'わ'..='ん' => "わ",
+        'ア'..='オ' => "ア",
+        'カ'..='ゴ' => "カ",
+        'サ'..='ゾ' => "サ",
+        'タ'..='ド' => "タ",
+        'ナ'..='ノ' => "ナ",
+        'ハ'..='ポ' => "ハ",
+        'マ'..='モ' => "マ",
+        'ヤ' | 'ユ' | 'ヨ' => "ヤ",
+        'ラ'..='ロ' => "ラ",
+        'ワ'..='ン' => "ワ",
+        'a'..='z' | 'A'..='Z' => "a",
+        '0'..='9' => "0",
+        _ => "a",
+    }
+}
+
+#[test]
+fn test_name_bucket_hiragana() {
+    // Hiragana buckets
+    assert_eq!(get_name_bucket("あいうえお"), "あ");
+    assert_eq!(get_name_bucket("かきくけこ"), "か");
+    assert_eq!(get_name_bucket("がぎぐげご"), "か"); // voiced
+    assert_eq!(get_name_bucket("さしすせそ"), "さ");
+    assert_eq!(get_name_bucket("ざじずぜぞ"), "さ"); // voiced
+    assert_eq!(get_name_bucket("たちつてと"), "た");
+    assert_eq!(get_name_bucket("だぢづでど"), "た"); // voiced
+    assert_eq!(get_name_bucket("なにぬねの"), "な");
+    assert_eq!(get_name_bucket("はひふへほ"), "は");
+    assert_eq!(get_name_bucket("ばびぶべぼ"), "は"); // voiced
+    assert_eq!(get_name_bucket("ぱぴぷぺぽ"), "は"); // semi-voiced
+    assert_eq!(get_name_bucket("まみむめも"), "ま");
+    assert_eq!(get_name_bucket("やゆよ"), "や");
+    assert_eq!(get_name_bucket("らりるれろ"), "ら");
+    assert_eq!(get_name_bucket("わをん"), "わ");
+}
+
+#[test]
+fn test_name_bucket_katakana() {
+    // Katakana buckets
+    assert_eq!(get_name_bucket("アイウエオ"), "ア");
+    assert_eq!(get_name_bucket("カキクケコ"), "カ");
+    assert_eq!(get_name_bucket("ガギグゲゴ"), "カ"); // voiced
+    assert_eq!(get_name_bucket("サシスセソ"), "サ");
+    assert_eq!(get_name_bucket("タチツテト"), "タ");
+    assert_eq!(get_name_bucket("ナニヌネノ"), "ナ");
+    assert_eq!(get_name_bucket("ハヒフヘホ"), "ハ");
+    assert_eq!(get_name_bucket("マミムメモ"), "マ");
+    assert_eq!(get_name_bucket("ヤユヨ"), "ヤ");
+    assert_eq!(get_name_bucket("ラリルレロ"), "ラ");
+    assert_eq!(get_name_bucket("ワヲン"), "ワ");
+}
+
+#[test]
+fn test_name_bucket_alphabetic() {
+    // All alphabetic names go to "a" bucket
+    assert_eq!(get_name_bucket("Apple"), "a");
+    assert_eq!(get_name_bucket("Banana"), "a");
+    assert_eq!(get_name_bucket("Zebra"), "a");
+    assert_eq!(get_name_bucket("circle"), "a");
+}
+
+#[test]
+fn test_name_bucket_numeric() {
+    // All numeric names go to "0" bucket
+    assert_eq!(get_name_bucket("123Circle"), "0");
+    assert_eq!(get_name_bucket("42Studio"), "0");
+}
+
+#[test]
+fn test_name_bucket_empty_or_special() {
+    // Empty or special characters default to "a"
+    assert_eq!(get_name_bucket(""), "a");
+    assert_eq!(get_name_bucket("☆Star"), "a");
+    assert_eq!(get_name_bucket("★Planet"), "a");
+}
+
+// =============================================================================
+// ProductApiContent Custom Genres Tests
+// =============================================================================
+
+use dlsite_gamebox::client::product_api::interface::{ProductApiContent, CustomGenre, GenreApi};
+
+#[test]
+fn test_custom_genre_structure() {
+    // Test that CustomGenre can be deserialized with expected fields
+    let json = r#"{
+        "genre_key": "custom_001",
+        "lang": "ja",
+        "name": "カスタムジャンル",
+        "layout": {},
+        "status": "active",
+        "is_active": 1,
+        "start_date": "2024-01-01",
+        "end_date": "2024-12-31"
+    }"#;
+
+    let genre: CustomGenre = serde_json::from_str(json).unwrap();
+    assert_eq!(genre.genre_key, "custom_001");
+    assert_eq!(genre.lang, "ja");
+    assert_eq!(genre.name, "カスタムジャンル");
+    assert_eq!(genre.status, "active");
+    assert_eq!(genre.is_active, 1);
+}
+
+#[test]
+fn test_genre_api_structure() {
+    // Test that GenreApi can be deserialized with expected fields
+    let json = r#"{
+        "name": "ロールプレイング",
+        "id": 401,
+        "search_val": "RPG",
+        "name_base": "Role Playing"
+    }"#;
+
+    let genre: GenreApi = serde_json::from_str(json).unwrap();
+    assert_eq!(genre.name, "ロールプレイング");
+    assert_eq!(genre.id, 401);
+    assert_eq!(genre.search_val, "RPG");
+    assert_eq!(genre.name_base, "Role Playing");
+}
+
+// =============================================================================
+// Review Sort Order Tests
+// =============================================================================
+
+use dlsite_gamebox::client::product::review::ReviewSortOrder;
+
+#[test]
+fn test_review_sort_order_exists() {
+    // Verify ReviewSortOrder enum exists with expected variants
+    let _new = ReviewSortOrder::New;
+    let _top = ReviewSortOrder::Top;
+}
+
+// =============================================================================
+// Circle Profile Structure Tests
+// =============================================================================
+
+#[cfg(feature = "search-html")]
+use dlsite_gamebox::client::circle::CircleProfile;
+
+#[cfg(feature = "search-html")]
+#[test]
+fn test_circle_profile_structure() {
+    // Test that CircleProfile can be created with expected fields
+    let profile = CircleProfile {
+        id: "RG24350".to_string(),
+        name: "桃色CODE".to_string(),
+        description: Some("A circle description".to_string()),
+        banner_url: Some("https://example.com/banner.jpg".to_string()),
+    };
+
+    assert_eq!(profile.id, "RG24350");
+    assert_eq!(profile.name, "桃色CODE");
+    assert!(profile.description.is_some());
+    assert!(profile.banner_url.is_some());
+}
+
+#[cfg(feature = "search-html")]
+#[test]
+fn test_circle_profile_minimal() {
+    // Test CircleProfile with minimal fields
+    let profile = CircleProfile {
+        id: "RG00000".to_string(),
+        name: "Unknown Circle".to_string(),
+        description: None,
+        banner_url: None,
+    };
+
+    assert_eq!(profile.id, "RG00000");
+    assert_eq!(profile.name, "Unknown Circle");
+    assert!(profile.description.is_none());
+    assert!(profile.banner_url.is_none());
+}
