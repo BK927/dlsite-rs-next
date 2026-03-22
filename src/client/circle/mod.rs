@@ -1,15 +1,14 @@
 //! Interfaces related to circle only. For more information, see [`CircleClient`].
+//!
+//! **Note:** This entire module requires the `search-html` feature flag.
 
 mod query;
 
-#[cfg(feature = "search-html")]
 use scraper::{Html, Selector};
 
-#[cfg(feature = "search-html")]
 use super::search::{SearchProductItem, SearchResult};
 use super::DlsiteClient;
 use crate::error::Result;
-#[cfg(feature = "search-html")]
 use crate::utils::ToParseError as _;
 
 pub use self::query::CircleQuery;
@@ -57,8 +56,6 @@ fn get_name_bucket(name: &str) -> &'static str {
 }
 
 /// Basic profile metadata for a DLsite circle (maker).
-///
-/// **Note:** Profile data is only available with the `search-html` feature flag.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CircleProfile {
     pub id: String,
@@ -68,9 +65,6 @@ pub struct CircleProfile {
 }
 
 /// Client to get circle-related content from DLsite.
-///
-/// **Note:** Circle functionality requires the `search-html` feature flag because
-/// it relies on HTML parsing of circle pages.
 ///
 /// Enable it in your `Cargo.toml`:
 /// ```toml
@@ -84,9 +78,7 @@ pub struct CircleClient<'a> {
 impl<'a> CircleClient<'a> {
     /// Fetch basic profile metadata for a circle by scraping the circle's HTML page.
     ///
-    /// **Requires `search-html` feature flag.**
-    ///
-    /// This reuses the same HTTP request as \[`get_circle_profile`\] (the response is cached),
+    /// This reuses the same HTTP request as [`Self::get_circle`] (the response is cached),
     /// so calling both methods for the same circle is inexpensive.
     ///
     /// # Arguments
@@ -95,7 +87,6 @@ impl<'a> CircleClient<'a> {
     /// # Returns
     /// [`CircleProfile`] with `id`, `name`, `description`, and `banner_url`.
     /// `description` and `banner_url` are `None` if not found on the page.
-    #[cfg(feature = "search-html")]
     pub async fn get_circle_profile(&self, circle_id: &str) -> Result<CircleProfile> {
         // Uses the default CircleQuery path so the response is shared with get_circle calls
         let query_path = CircleQuery::default().to_path(circle_id);
@@ -128,9 +119,6 @@ impl<'a> CircleClient<'a> {
     }
 
     /// Search circle-related products.
-    ///
-    /// **Requires `search-html` feature flag.**
-    #[cfg(feature = "search-html")]
     pub async fn get_circle(&self, circle_id: &str, options: &CircleQuery) -> Result<SearchResult> {
         use super::search::parse_search_html;
 
@@ -163,8 +151,6 @@ impl<'a> CircleClient<'a> {
 
     /// List all games from a circle, filtering out non-game works.
     ///
-    /// **Requires `search-html` feature flag.**
-    ///
     /// Game work types include: Action (ACN), Quiz (QIZ), Adventure (ADV),
     /// RPG, Table (TBL), Digital Novel (DNV), Simulation (SLN),
     /// Typing (TYP), Shooting (STG), Puzzle (PZL), and Other Games (ETC).
@@ -188,7 +174,6 @@ impl<'a> CircleClient<'a> {
     ///     }
     /// }
     /// ```
-    #[cfg(feature = "search-html")]
     pub async fn list_circle_games(&self, maker_id: &str) -> Result<Vec<SearchProductItem>> {
         let result = self.get_circle(maker_id, &CircleQuery::default()).await?;
         Ok(result
@@ -199,8 +184,6 @@ impl<'a> CircleClient<'a> {
     }
 
     /// Resolve a circle name to its maker ID.
-    ///
-    /// **Requires `search-html` feature flag.**
     ///
     /// This method scrapes the DLsite circle list page to find a circle
     /// by its exact name and returns the maker ID if found.
@@ -224,7 +207,6 @@ impl<'a> CircleClient<'a> {
     ///     }
     /// }
     /// ```
-    #[cfg(feature = "search-html")]
     pub async fn resolve_circle_name(&self, circle_name: &str) -> Result<Option<String>> {
         let bucket = get_name_bucket(circle_name);
         let path = format!("/home/circle/list/=/name_header/{}", bucket);

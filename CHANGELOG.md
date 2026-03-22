@@ -11,6 +11,11 @@ All notable changes to this project will be documented in this file.
 - `DlsiteClientBuilder::build()` now returns `Result<DlsiteClient, DlsiteError>` instead of panicking
 - Default TLS backend changed from native-tls to rustls-tls
 - Removed `reqwest-default-tls` feature (use `reqwest-native-tls` instead)
+- **API Surface Alignment**: `search` and `circle` modules are now only available when `search-html` feature is enabled
+  - `DlsiteClient::search()` and `DlsiteClient::circle()` methods now require `search-html` feature
+  - `dlsite_rs::client::search::*` and `dlsite_rs::client::circle::*` types now require `search-html` feature
+  - This aligns the public API surface with the actual feature requirements, eliminating dead code warnings in default builds
+  - Users who need search/circle functionality must add `features = ["search-html"]` to their `Cargo.toml`
 
 #### Improvements
 - User-Agent now uses `env!("CARGO_PKG_NAME")` and `env!("CARGO_PKG_VERSION")` instead of hardcoded string

@@ -1,26 +1,18 @@
 //! Interfaces related to search feature only. For more information, see [`SearchClient`].
-
 //!
-//! **Feature Flags:**
-//! - `search-html`: Enables search functionality with HTML parsing. This adds
-//!   `scraper` and `rayon` dependencies. Without this feature, search methods
-//!   are not available.
+//! **Note:** This entire module requires the `search-html` feature flag.
 
 pub(crate) mod macros;
 mod query;
-#[cfg(feature = "search-html")]
 mod selectors;
 
-#[cfg(feature = "search-html")]
 use rayon::prelude::*;
-#[cfg(feature = "search-html")]
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
 
-#[cfg(feature = "search-html")]
 use crate::utils::ToParseError;
 use crate::{
     cache::GenericCache,
@@ -32,8 +24,6 @@ use crate::{
 pub use self::query::SearchProductQuery;
 
 /// Client to search products on DLsite.
-///
-/// **Requires `search-html` feature flag.**
 ///
 /// Enable it in your `Cargo.toml`:
 /// ```toml
@@ -82,14 +72,12 @@ pub struct SearchResult {
     pub query_path: String,
 }
 
-#[cfg(feature = "search-html")]
 fn parse_count_str(str: &str) -> Result<i32> {
     str.replace(['(', ')', ','], "")
         .parse()
         .to_parse_error("Failed to parse string to count")
 }
 
-#[cfg(feature = "search-html")]
 fn parse_num_str(str: &str) -> Result<i32> {
     str.replace(',', "")
         .parse()
@@ -109,8 +97,6 @@ impl<'a> SearchClient<'a> {
     }
 
     /// Search products on DLsite.
-    ///
-    /// **Requires `search-html` feature flag.**
     ///
     /// # Arguments
     /// * `options` - Struct of search options.
@@ -134,7 +120,6 @@ impl<'a> SearchClient<'a> {
     ///     dbg!(&product);
     /// }
     /// ```
-    #[cfg(feature = "search-html")]
     pub async fn search_product(&self, options: &SearchProductQuery) -> Result<SearchResult> {
         let query_path = options.to_path();
 
@@ -181,8 +166,6 @@ impl<'a> SearchClient<'a> {
 
     /// Search multiple queries concurrently for better performance
     ///
-    /// **Requires `search-html` feature flag.**
-    ///
     /// This method uses tokio::join_all to fetch multiple pages in parallel
     ///
     /// # Arguments
@@ -190,7 +173,6 @@ impl<'a> SearchClient<'a> {
     ///
     /// # Returns
     /// * `Vec<SearchResult>` - Results for each query in the same order
-    #[cfg(feature = "search-html")]
     pub async fn search_products_batch(
         &self,
         queries: &[SearchProductQuery],
@@ -202,8 +184,6 @@ impl<'a> SearchClient<'a> {
 
     /// Stream search results for a query, parsing items as they are fetched
     ///
-    /// **Requires `search-html` feature flag.**
-    ///
     /// This method is optimized for memory efficiency and responsiveness
     ///
     /// # Arguments
@@ -212,7 +192,6 @@ impl<'a> SearchClient<'a> {
     ///
     /// # Returns
     /// * `Result<i32>` - Total count of items
-    #[cfg(feature = "search-html")]
     pub async fn search_product_stream<F>(
         &self,
         options: &SearchProductQuery,
@@ -242,9 +221,6 @@ impl<'a> SearchClient<'a> {
 }
 
 /// Parse a single search result item from HTML element
-///
-/// **Only available with `search-html` feature flag.**
-#[cfg(feature = "search-html")]
 fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
     let item_element = Html::parse_fragment(item_html);
     let item_element = item_element.root_element();
@@ -456,9 +432,6 @@ fn parse_search_item_html(item_html: &str) -> Result<SearchProductItem> {
 }
 
 /// Parse search HTML into a list of search results
-///
-/// **Only available with `search-html` feature flag.**
-#[cfg(feature = "search-html")]
 pub(crate) fn parse_search_html(html: &str) -> Result<Vec<SearchProductItem>> {
     let html = Html::parse_fragment(html);
     let mut result: Vec<SearchProductItem> = vec![];
@@ -694,10 +667,7 @@ pub(crate) fn parse_search_html(html: &str) -> Result<Vec<SearchProductItem>> {
 
 /// Parse search HTML using parallel processing for better performance
 ///
-/// **Only available with `search-html` feature flag.**
-///
 /// This function is optimized for large result sets (50+ items)
-#[cfg(feature = "search-html")]
 pub(crate) fn parse_search_html_parallel(html: &str) -> Result<Vec<SearchProductItem>> {
     let html = Html::parse_fragment(html);
 

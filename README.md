@@ -24,9 +24,21 @@ dlsite-rs = "0.2"
 | Feature | Description |
 |---------|-------------|
 | (default) | `unknown-field-log` + `reqwest-rustls-tls` |
-| `search-html` | HTML scraping-based search (adds `scraper`, `rayon`) |
+| `search-html` | HTML scraping-based search and circle functionality (adds `scraper`, `rayon`) |
 | `cookie-store` | Session/auth support (adds `reqwest/cookies`) |
 | `reqwest-native-tls` | Use native TLS instead of rustls |
+
+**Important**: The `search-html` feature flag controls API visibility:
+- Without `search-html`: `DlsiteClient::search()` and `DlsiteClient::circle()` methods are **not available**
+- Types like `SearchProductQuery`, `SearchResult`, `CircleClient`, etc. are **not accessible**
+- This ensures the public API surface matches the actual feature requirements
+
+To use search or circle functionality:
+
+```toml
+[dependencies]
+dlsite-rs = { version = "0.2", features = ["search-html"] }
+```
 
 **TLS Backend**: By default, this crate uses `rustls` (pure Rust TLS). To use native TLS:
 

@@ -4,15 +4,6 @@
 use scraper::Selector;
 use std::sync::OnceLock;
 
-/// Get the selector for search result items
-#[allow(dead_code)]
-pub fn search_result_items() -> &'static Selector {
-    static SELECTOR: OnceLock<Selector> = OnceLock::new();
-    SELECTOR.get_or_init(|| {
-        Selector::parse("#search_result_img_box > li").expect("Failed to parse selector")
-    })
-}
-
 /// Get the selector for product ID element
 pub fn product_id_element() -> &'static Selector {
     static SELECTOR: OnceLock<Selector> = OnceLock::new();

@@ -7,10 +7,13 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
 
-pub mod circle;
 pub mod product;
 pub mod product_api;
 pub mod ranking;
+
+#[cfg(feature = "search-html")]
+pub mod circle;
+#[cfg(feature = "search-html")]
 pub mod search;
 
 #[cfg(feature = "cookie-store")]
@@ -344,11 +347,17 @@ impl DlsiteClient {
     }
 
     /// Get a client to fetch circle info. For more information, see [`circle::CircleClient`].
+    ///
+    /// **Requires `search-html` feature flag.**
+    #[cfg(feature = "search-html")]
     pub fn circle(&self) -> circle::CircleClient<'_> {
         circle::CircleClient { c: self }
     }
 
     /// Get a client to search things. For more information, see [`search::SearchClient`].
+    ///
+    /// **Requires `search-html` feature flag.**
+    #[cfg(feature = "search-html")]
     pub fn search(&self) -> search::SearchClient<'_> {
         search::SearchClient::new(self)
     }
