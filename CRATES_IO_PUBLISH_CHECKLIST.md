@@ -1,63 +1,63 @@
-# Crates.io 发布检查清单
+# Crates.io Publishing Checklist
 
-## ✅ 发布前准备
+## Pre-release Preparation
 
-### 1. Cargo.toml 配置
-- [x] 包名: `dlsite-gamebox` (避免与原始 `dlsite` 冲突)
-- [x] 版本: `0.2.0`
-- [x] 描述: "High-performance DLsite client with caching, parallel parsing, and streaming support"
+### 1. Cargo.toml Configuration
+- [x] Package name: `dlsite-gamebox` (to avoid conflict with original `dlsite`)
+- [x] Version: `0.2.0`
+- [x] Description: "High-performance DLsite client with caching, parallel parsing, and streaming support"
 - [x] License: MIT
 - [x] Repository: https://github.com/SuperToolman/dlsite-gamebox
 - [x] Authors: SuperToolman
 - [x] Keywords: dlsite, scraper, api, async, performance
 - [x] Categories: api-bindings
 
-### 2. 代码质量
-- [x] 所有测试通过 (27/27 单元测试)
-- [x] 编译无错误
-- [x] 文档完整
-- [x] 示例清晰
+### 2. Code Quality
+- [x] All tests passing (27/27 unit tests)
+- [x] No compilation errors
+- [x] Documentation complete
+- [x] Examples clear
 
-### 3. 文档
-- [x] README.md 完整
-- [x] CHANGELOG.md 完整
-- [x] 代码注释充分
-- [x] 示例代码可运行
+### 3. Documentation
+- [x] README.md complete
+- [x] CHANGELOG.md complete
+- [x] Code comments adequate
+- [x] Example code runnable
 
-### 4. 许可证
-- [x] LICENSE 文件存在
-- [x] Cargo.toml 中指定 MIT 许可证
+### 4. License
+- [x] LICENSE file exists
+- [x] MIT license specified in Cargo.toml
 
-### 5. 依赖
-- [x] 所有依赖都是公开的
-- [x] 没有本地路径依赖
-- [x] 依赖版本合理
+### 5. Dependencies
+- [x] All dependencies are public
+- [x] No local path dependencies
+- [x] Dependency versions reasonable
 
-## 📋 发布步骤
+## Publishing Steps
 
-### 步骤 1: 验证包
+### Step 1: Verify Package
 ```bash
 cargo publish --dry-run
 ```
 
-### 步骤 2: 提交更改
+### Step 2: Commit Changes
 ```bash
 git add Cargo.toml
 git commit -m "chore: Update package name to dlsite-gamebox for crates.io"
 git push origin master
 ```
 
-### 步骤 3: 发布到 crates.io
+### Step 3: Publish to crates.io
 ```bash
 cargo publish
 ```
 
-### 步骤 4: 验证发布
-访问: https://crates.io/crates/dlsite-gamebox
+### Step 4: Verify Publication
+Visit: https://crates.io/crates/dlsite-gamebox
 
-## 🔍 发布前验证
+## Pre-release Verification
 
-### 检查 Cargo.toml
+### Check Cargo.toml
 ```toml
 [package]
 name = "dlsite-gamebox"
@@ -71,73 +71,72 @@ keywords = ["dlsite", "scraper", "api", "async", "performance"]
 categories = ["api-bindings"]
 ```
 
-### 检查文件
-- [x] Cargo.toml - 配置正确
-- [x] Cargo.lock - 存在（可选）
-- [x] src/lib.rs - 公开 API 正确
-- [x] README.md - 包含使用示例
-- [x] LICENSE - MIT 许可证
+### Check Files
+- [x] Cargo.toml - Configuration correct
+- [x] Cargo.lock - Exists (optional)
+- [x] src/lib.rs - Public API correct
+- [x] README.md - Contains usage examples
+- [x] LICENSE - MIT license
 
-## 📊 包信息
+## Package Information
 
-| 项目 | 值 |
-|------|-----|
-| 包名 | dlsite-gamebox |
-| 版本 | 0.2.0 |
-| 许可证 | MIT |
-| 仓库 | https://github.com/SuperToolman/dlsite-gamebox |
-| 分类 | api-bindings |
-| 关键词 | dlsite, scraper, api, async, performance |
+| Item | Value |
+|------|-------|
+| Package name | dlsite-gamebox |
+| Version | 0.2.0 |
+| License | MIT |
+| Repository | https://github.com/SuperToolman/dlsite-gamebox |
+| Category | api-bindings |
+| Keywords | dlsite, scraper, api, async, performance |
 
-## 🎯 发布后
+## Post-release
 
-### 1. 创建 GitHub Release
+### 1. Create GitHub Release
 ```bash
 git tag -a v0.2.0-crates -m "Release v0.2.0 to crates.io"
 git push origin v0.2.0-crates
 ```
 
-### 2. 更新文档
-- 在 README 中添加 crates.io 链接
-- 在 GitHub 中创建 Release 说明
+### 2. Update Documentation
+- Add crates.io link to README
+- Create Release notes on GitHub
 
-### 3. 宣传
-- 在 Rust 社区分享
-- 更新相关文档
+### 3. Promotion
+- Share in Rust community
+- Update related documentation
 
-## ⚠️ 注意事项
+## Important Notes
 
-1. **包名冲突**: 已改为 `dlsite-gamebox` 以避免与原始 `dlsite` 冲突
-2. **版本号**: 从 0.2.0 开始，表示这是一个优化版本
-3. **向后兼容**: 所有 API 都是向后兼容的
-4. **文档**: 确保所有公开 API 都有文档
+1. **Package name conflict**: Changed to `dlsite-gamebox` to avoid conflict with original `dlsite`
+2. **Version number**: Starting from 0.2.0, indicating an optimized version
+3. **Backward compatibility**: All APIs are backward compatible
+4. **Documentation**: Ensure all public APIs have documentation
 
-## 🚀 快速发布命令
+## Quick Publish Commands
 
 ```bash
-# 1. 验证包（推荐先运行）
+# 1. Verify package (recommended to run first)
 cargo publish --dry-run
 
-# 2. 发布到 crates.io
+# 2. Publish to crates.io
 cargo publish
 
-# 3. 验证发布成功
+# 3. Verify successful publication
 curl https://crates.io/api/v1/crates/dlsite-gamebox
 ```
 
-## 📝 发布后的更新
+## Post-publication Updates
 
-发布后，如果需要更新：
-1. 修改 Cargo.toml 中的版本号
-2. 更新 CHANGELOG.md
-3. 提交并推送到 GitHub
-4. 运行 `cargo publish`
+After publishing, if updates are needed:
+1. Modify version number in Cargo.toml
+2. Update CHANGELOG.md
+3. Commit and push to GitHub
+4. Run `cargo publish`
 
-## ✨ 完成
+## Done
 
-准备好发布了！运行以下命令：
+Ready to publish! Run the following command:
 
 ```bash
 cargo publish
 ```
-
