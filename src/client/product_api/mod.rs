@@ -6,7 +6,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use dlsite_rs::DlsiteClient;
+//! use dlsite_rs_next::DlsiteClient;
 //!
 //! #[tokio::main]
 //! async fn main() {
@@ -58,7 +58,7 @@ impl<'a> ProductApiClient<'a> {
     ///
     /// # Example
     /// ```no_run
-    /// use dlsite_rs::DlsiteClient;
+    /// use dlsite_rs_next::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {
@@ -122,7 +122,7 @@ impl<'a> ProductApiClient<'a> {
     ///
     /// # Example
     /// ```no_run
-    /// use dlsite_rs::DlsiteClient;
+    /// use dlsite_rs_next::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {
@@ -146,7 +146,7 @@ impl<'a> ProductApiClient<'a> {
     ///
     /// # Example
     /// ```no_run
-    /// use dlsite_rs::DlsiteClient;
+    /// use dlsite_rs_next::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {

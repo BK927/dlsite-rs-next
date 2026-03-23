@@ -18,7 +18,7 @@
 
 mod common;
 
-use dlsite_rs::DlsiteClient;
+use dlsite_rs_next::DlsiteClient;
 
 /// Check if live tests are enabled via environment variable
 fn live_tests_enabled() -> bool {
@@ -143,7 +143,7 @@ async fn live_get_product_api_not_found() {
 #[ignore = "Live test - requires network and search-html feature. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke --features search-html -- --ignored"]
 #[cfg(feature = "search-html")]
 async fn live_search_basic() {
-    use dlsite_rs::client::search::SearchProductQuery;
+    use dlsite_rs_next::client::search::SearchProductQuery;
 
     skip_unless_live!();
 
@@ -182,8 +182,8 @@ async fn live_raw_request_product_json() {
 // Review API Tests
 // =============================================================================
 
-use dlsite_rs::client::product::review::ReviewSortOrder;
-use dlsite_rs::interface::query::Language;
+use dlsite_rs_next::client::product::review::ReviewSortOrder;
+use dlsite_rs_next::interface::query::Language;
 
 #[tokio::test]
 #[ignore = "Live test - requires network. Run with: DLSITE_LIVE_TESTS=1 cargo test --test live_smoke -- --ignored"]

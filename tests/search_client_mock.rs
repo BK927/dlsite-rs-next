@@ -5,8 +5,8 @@
 
 #[cfg(feature = "search-html")]
 mod search_client_mock {
-    use dlsite_rs::client::search::SearchProductQuery;
-    use dlsite_rs::{DlsiteClient, DlsiteError};
+    use dlsite_rs_next::client::search::SearchProductQuery;
+    use dlsite_rs_next::{DlsiteClient, DlsiteError};
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 

@@ -1,5 +1,5 @@
 [package]
-name = "dlsite-rs"
+name = "dlsite-rs-next"
 version = "0.2.0"
 edition = "2021"
 rust-version = "1.75"
@@ -7,7 +7,7 @@ description = "High-performance DLsite client with caching, parallel parsing, an
 license = "MIT"
 repository = "https://github.com/BK927/dlsite-rs-next"
 homepage = "https://github.com/BK927/dlsite-rs-next"
-documentation = "https://docs.rs/dlsite-rs"
+documentation = "https://docs.rs/dlsite-rs-next"
 readme = "README.md"
 keywords = ["dlsite", "api", "async", "japan", "doujin"]
 categories = ["api-bindings", "web-programming::http-client"]

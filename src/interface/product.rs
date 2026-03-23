@@ -156,7 +156,7 @@ impl WorkType {
     ///
     /// # Example
     /// ```
-    /// use dlsite_rs::interface::product::WorkType;
+    /// use dlsite_rs_next::interface::product::WorkType;
     ///
     /// assert!(WorkType::RPG.is_game());
     /// assert!(WorkType::ADV.is_game());

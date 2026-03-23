@@ -10,13 +10,13 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! dlsite-rs = { version = "0.2", features = ["search-html"] }
+//! dlsite-rs-next = { version = "0.2", features = ["search-html"] }
 //! ```
 //!
 //! # Basic Search
 //!
 //! ```ignore
-//! use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery};
+//! use dlsite_rs_next::{DlsiteClient, client::search::SearchProductQuery};
 //!
 //! #[tokio::main]
 //! async fn main() {
@@ -62,7 +62,7 @@ pub use self::query::SearchProductQuery;
 ///
 /// Enable it in your `Cargo.toml`:
 /// ```toml
-/// dlsite-rs = { version = "0.2", features = ["search-html"] }
+/// dlsite-rs-next = { version = "0.2", features = ["search-html"] }
 /// ```
 pub struct SearchClient<'a> {
     pub(crate) c: &'a DlsiteClient,
@@ -160,7 +160,7 @@ impl<'a> SearchClient<'a> {
     ///
     /// # Example
     /// ```ignore
-    /// use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
+    /// use dlsite_rs_next::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
     ///
     /// #[tokio::main]
     /// async fn main() {

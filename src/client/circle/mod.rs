@@ -10,13 +10,13 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! dlsite-rs = { version = "0.2", features = ["search-html"] }
+//! dlsite-rs-next = { version = "0.2", features = ["search-html"] }
 //! ```
 //!
 //! # Example
 //!
 //! ```ignore
-//! use dlsite_rs::DlsiteClient;
+//! use dlsite_rs_next::DlsiteClient;
 //!
 //! #[tokio::main]
 //! async fn main() {
@@ -100,7 +100,7 @@ pub struct CircleProfile {
 ///
 /// Enable it in your `Cargo.toml`:
 /// ```toml
-/// dlsite-rs = { version = "0.2", features = ["search-html"] }
+/// dlsite-rs-next = { version = "0.2", features = ["search-html"] }
 /// ```
 #[derive(Clone, Debug)]
 pub struct CircleClient<'a> {
@@ -195,7 +195,7 @@ impl<'a> CircleClient<'a> {
     ///
     /// # Example
     /// ```ignore
-    /// use dlsite_rs::DlsiteClient;
+    /// use dlsite_rs_next::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {
@@ -229,7 +229,7 @@ impl<'a> CircleClient<'a> {
     ///
     /// # Example
     /// ```ignore
-    /// use dlsite_rs::DlsiteClient;
+    /// use dlsite_rs_next::DlsiteClient;
     ///
     /// #[tokio::main]
     /// async fn main() {

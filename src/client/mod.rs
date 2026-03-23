@@ -16,7 +16,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use dlsite_rs::DlsiteClient;
+//! use dlsite_rs_next::DlsiteClient;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -207,7 +207,7 @@ impl DlsiteClient {
     /// The client is configured with:
     /// - Connection pool: 10 idle connections per host
     /// - Timeout: 30 seconds
-    /// - User-Agent: dlsite-rs/\<version\>
+    /// - User-Agent: dlsite-rs-next/\<version\>
     /// - Rate limit: 2 requests per second
     /// - Cache: 100 entries with 1 hour TTL
     /// - Retry: 3 attempts with exponential backoff

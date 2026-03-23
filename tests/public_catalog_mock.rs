@@ -7,10 +7,10 @@
 
 mod common;
 
-use dlsite_rs::client::product::ProductPeople;
-use dlsite_rs::client::product_api::interface::{Creator, Creators};
-use dlsite_rs::interface::product::WorkType;
-use dlsite_rs::{DlsiteClient, DlsiteError, RetryConfig};
+use dlsite_rs_next::client::product::ProductPeople;
+use dlsite_rs_next::client::product_api::interface::{Creator, Creators};
+use dlsite_rs_next::interface::product::WorkType;
+use dlsite_rs_next::{DlsiteClient, DlsiteError, RetryConfig};
 use std::time::Duration;
 use wiremock::matchers::{method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};

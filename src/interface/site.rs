@@ -7,8 +7,8 @@
 //! # Example
 //!
 //! ```
-//! use dlsite_rs::interface::site::Site;
-//! use dlsite_rs::DlsiteClient;
+//! use dlsite_rs_next::interface::site::Site;
+//! use dlsite_rs_next::DlsiteClient;
 //!
 //! // Target the adult doujin site (default)
 //! let client = DlsiteClient::for_site(Site::Maniax);
@@ -50,7 +50,7 @@ impl Site {
     ///
     /// # Examples
     /// ```
-    /// use dlsite_rs::interface::site::Site;
+    /// use dlsite_rs_next::interface::site::Site;
     /// assert_eq!(Site::Maniax.base_url(), "https://www.dlsite.com/maniax");
     /// assert_eq!(Site::Books.base_url(), "https://www.dlsite.com/books");
     /// ```

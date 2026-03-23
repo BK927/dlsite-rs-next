@@ -7,10 +7,10 @@
 
 mod common;
 
-use dlsite_rs::client::product::ProductPeople;
-use dlsite_rs::client::product_api::interface::{Creator, Creators};
-use dlsite_rs::interface::product::WorkType;
-use dlsite_rs::interface::query::Language;
+use dlsite_rs_next::client::product::ProductPeople;
+use dlsite_rs_next::client::product_api::interface::{Creator, Creators};
+use dlsite_rs_next::interface::product::WorkType;
+use dlsite_rs_next::interface::query::Language;
 use std::str::FromStr;
 
 // =============================================================================
@@ -516,7 +516,7 @@ fn test_name_bucket_empty_or_special() {
 // ProductApiContent Custom Genres Tests
 // =============================================================================
 
-use dlsite_rs::client::product_api::interface::{CustomGenre, GenreApi};
+use dlsite_rs_next::client::product_api::interface::{CustomGenre, GenreApi};
 
 #[test]
 fn test_custom_genre_structure() {
@@ -561,7 +561,7 @@ fn test_genre_api_structure() {
 // Review Sort Order Tests
 // =============================================================================
 
-use dlsite_rs::client::product::review::ReviewSortOrder;
+use dlsite_rs_next::client::product::review::ReviewSortOrder;
 
 #[test]
 fn test_review_sort_order_exists() {
@@ -575,7 +575,7 @@ fn test_review_sort_order_exists() {
 // =============================================================================
 
 #[cfg(feature = "search-html")]
-use dlsite_rs::client::circle::CircleProfile;
+use dlsite_rs_next::client::circle::CircleProfile;
 
 #[cfg(feature = "search-html")]
 #[test]

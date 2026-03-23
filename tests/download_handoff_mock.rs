@@ -12,8 +12,8 @@
 
 mod common;
 
-use dlsite_rs::adapters::download::DownloadTarget;
-use dlsite_rs::{DlsiteClient, RetryConfig};
+use dlsite_rs_next::adapters::download::DownloadTarget;
+use dlsite_rs_next::{DlsiteClient, RetryConfig};
 use std::time::Duration;
 use wiremock::matchers::{method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};

@@ -350,7 +350,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "dlsite-rs"
+name = "dlsite-rs-next"
 version = "0.2.0"
 dependencies = [
  "anyhow",

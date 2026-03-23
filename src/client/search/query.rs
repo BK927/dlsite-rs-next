@@ -6,7 +6,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::*};
+//! use dlsite_rs_next::{DlsiteClient, client::search::SearchProductQuery, interface::query::*};
 //!
 //! let query = SearchProductQuery {
 //!     keyword: Some("ASMR".to_string()),
@@ -65,8 +65,8 @@ use crate::interface::query::*;
 /// # Example
 ///
 /// ```ignore
-/// use dlsite_rs::client::search::SearchProductQuery;
-/// use dlsite_rs::interface::query::{SexCategory, Order};
+/// use dlsite_rs_next::client::search::SearchProductQuery;
+/// use dlsite_rs_next::interface::query::{SexCategory, Order};
 ///
 /// let query = SearchProductQuery {
 ///     keyword: Some("ASMR".to_string()),

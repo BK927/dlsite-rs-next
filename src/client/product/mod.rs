@@ -10,7 +10,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use dlsite_rs::DlsiteClient;
+//! use dlsite_rs_next::DlsiteClient;
 //!
 //! #[tokio::main]
 //! async fn main() {
@@ -25,7 +25,7 @@
 //!     println!("Price: {} JPY", ajax.price);
 //!
 //!     // Get reviews
-//!     use dlsite_rs::client::product::review::ReviewSortOrder;
+//!     use dlsite_rs_next::client::product::review::ReviewSortOrder;
 //!     let reviews = client.product()
 //!         .get_review("RJ123456", 10, 1, true, ReviewSortOrder::New)
 //!         .await
@@ -138,7 +138,7 @@ impl<'a> ProductClient<'a> {
     ///
     /// # Example
     /// ```no_run
-    /// use dlsite_rs::DlsiteClient;
+    /// use dlsite_rs_next::DlsiteClient;
     /// #[tokio::main]
     /// async fn main() {
     ///     let client = DlsiteClient::default();

@@ -12,7 +12,7 @@
 //! This module is only available with the `cookie-store` feature:
 //! ```toml
 //! [dependencies]
-//! dlsite-rs = { features = ["cookie-store"] }
+//! dlsite-rs-next = { features = ["cookie-store"] }
 //! ```
 
 use super::DlsiteClient;

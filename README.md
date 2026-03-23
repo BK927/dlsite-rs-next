@@ -1,7 +1,7 @@
-# dlsite-rs
+# dlsite-rs-next
 
-[![crates.io](https://img.shields.io/crates/v/dlsite-rs.svg)](https://crates.io/crates/dlsite-rs)
-[![docs.rs](https://docs.rs/dlsite-rs/badge.svg)](https://docs.rs/dlsite-rs)
+[![crates.io](https://img.shields.io/crates/v/dlsite-rs-next.svg)](https://crates.io/crates/dlsite-rs-next)
+[![docs.rs](https://docs.rs/dlsite-rs-next/badge.svg)](https://docs.rs/dlsite-rs-next)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A high-performance Rust client library for the [DLsite](https://www.dlsite.com/) platform,
@@ -16,7 +16,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-dlsite-rs = "0.2"
+dlsite-rs-next = "0.2"
 ```
 
 ### Feature Flags
@@ -37,14 +37,14 @@ To use search or circle functionality:
 
 ```toml
 [dependencies]
-dlsite-rs = { version = "0.2", features = ["search-html"] }
+dlsite-rs-next = { version = "0.2", features = ["search-html"] }
 ```
 
 **TLS Backend**: By default, this crate uses `rustls` (pure Rust TLS). To use native TLS:
 
 ```toml
 [dependencies]
-dlsite-rs = { version = "0.2", default-features = false, features = ["reqwest-native-tls", "unknown-field-log"] }
+dlsite-rs-next = { version = "0.2", default-features = false, features = ["reqwest-native-tls", "unknown-field-log"] }
 ```
 
 ## Performance
@@ -115,7 +115,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 - Get product by api
 
   ```rust,no_run
-  use dlsite_rs::DlsiteClient;
+  use dlsite_rs_next::DlsiteClient;
 
   #[tokio::main]
   async fn main() {
@@ -128,7 +128,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 - Get product thumbnail and screenshots
 
   ```rust,no_run
-  use dlsite_rs::DlsiteClient;
+  use dlsite_rs_next::DlsiteClient;
 
   #[tokio::main]
   async fn main() {
@@ -150,7 +150,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   **Note: Requires `search-html` feature flag**
 
   ```rust,ignore
-  use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
+  use dlsite_rs_next::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
 
   #[tokio::main]
   async fn main() {
@@ -175,7 +175,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   **Note: Requires `search-html` feature flag**
 
   ```rust,ignore
-  use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
+  use dlsite_rs_next::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
 
   #[tokio::main]
   async fn main() {
@@ -209,7 +209,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   **Note: Requires `search-html` feature flag**
 
   ```rust,ignore
-  use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
+  use dlsite_rs_next::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
 
   #[tokio::main]
   async fn main() {
@@ -235,7 +235,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   **Note: Requires `search-html` feature flag**
 
   ```rust,ignore
-  use dlsite_rs::DlsiteClient;
+  use dlsite_rs_next::DlsiteClient;
 
   #[tokio::main]
   async fn main() {
@@ -257,7 +257,7 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
 - Custom client configuration
 
   ```rust,no_run
-  use dlsite_rs::{DlsiteClient, RetryConfig};
+  use dlsite_rs_next::{DlsiteClient, RetryConfig};
   use std::time::Duration;
 
   #[tokio::main]

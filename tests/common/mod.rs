@@ -8,7 +8,7 @@ use std::fs;
 use std::path::Path;
 use std::time::Duration;
 
-use dlsite_rs::retry::RetryConfig;
+use dlsite_rs_next::retry::RetryConfig;
 
 /// Load a fixture file from the tests/fixtures directory
 ///
