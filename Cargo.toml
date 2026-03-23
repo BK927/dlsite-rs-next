@@ -13,6 +13,10 @@ keywords = ["dlsite", "api", "async", "japan", "doujin"]
 categories = ["api-bindings", "web-programming::http-client"]
 include = [
     "/src/**/*.rs",
+    "/tests/**/*.rs",
+    "/tests/**/*.json",
+    "/tests/**/*.html",
+    "/tests/**/*.txt",
     "/Cargo.toml",
     "/README.md",
     "/LICENSE",

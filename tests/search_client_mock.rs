@@ -177,7 +177,9 @@ mod search_client_mock {
 
         Mock::given(method("GET"))
             .and(path("/fsr/ajax/=/language/jp"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw("not valid json", "application/json"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw("not valid json", "application/json"),
+            )
             .mount(&mock_server)
             .await;
 
@@ -220,7 +222,9 @@ mod search_client_mock {
         // Mount a mock that can only be called once - this verifies cache behavior
         Mock::given(method("GET"))
             .and(path("/fsr/ajax/=/language/jp"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw(response.clone(), "application/json"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(response.clone(), "application/json"),
+            )
             .expect(1..=2) // Should be called at least once, at most twice (once for fetch, possibly once for count check)
             .mount(&mock_server)
             .await;
@@ -317,7 +321,11 @@ mod search_client_mock {
             },
         ];
 
-        let results = client.search().search_products_batch(&queries).await.unwrap();
+        let results = client
+            .search()
+            .search_products_batch(&queries)
+            .await
+            .unwrap();
 
         assert_eq!(results.len(), 2);
         for result in results {

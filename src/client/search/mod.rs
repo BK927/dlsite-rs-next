@@ -586,7 +586,8 @@ mod tests {
     #[test]
     fn test_parse_no_creator_product() {
         let html = load_fixture("no_creator.html");
-        let result = parse_search_item_html(&html).expect("Failed to parse product without creator");
+        let result =
+            parse_search_item_html(&html).expect("Failed to parse product without creator");
 
         assert_eq!(result.id, "RJ400456");
         assert_eq!(result.creator, None);
@@ -597,7 +598,8 @@ mod tests {
     #[test]
     fn test_parse_no_review_no_rating_product() {
         let html = load_fixture("no_review_no_rating.html");
-        let result = parse_search_item_html(&html).expect("Failed to parse product without review/rating");
+        let result =
+            parse_search_item_html(&html).expect("Failed to parse product without review/rating");
 
         assert_eq!(result.id, "RJ300789");
         assert_eq!(result.review_count, None);

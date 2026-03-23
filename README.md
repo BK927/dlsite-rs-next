@@ -280,6 +280,22 @@ See `docs/dlsite_endpoint_inventory.md` for the full endpoint coverage matrix.
   }
   ```
 
+## Development
+
+Before submitting a PR or publishing, run the verification checks:
+
+```bash
+# Individual checks
+cargo fmt --all -- --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test --all-features
+RUSTDOCFLAGS="-D warnings" cargo doc --all-features --no-deps
+cargo publish --dry-run
+
+# Or use the convenience script
+./scripts/check.sh
+```
+
 ## License
 
 Licensed under the MIT License. See \[LICENSE\](LICENSE) for details.
