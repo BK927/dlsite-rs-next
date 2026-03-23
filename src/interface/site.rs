@@ -1,4 +1,24 @@
 //! Site/host abstraction for DLsite subdomains.
+//!
+//! DLsite organizes content into different sub-sites based on content type
+//! and target audience. Use [`Site`] to specify which site to target when
+//! creating a client.
+//!
+//! # Example
+//!
+//! ```
+//! use dlsite_rs::interface::site::Site;
+//! use dlsite_rs::DlsiteClient;
+//!
+//! // Target the adult doujin site (default)
+//! let client = DlsiteClient::for_site(Site::Maniax);
+//!
+//! // Target the books/manga site
+//! let client = DlsiteClient::for_site(Site::Books);
+//!
+//! // Use a custom site segment
+//! let client = DlsiteClient::for_site(Site::Custom("girls".to_string()));
+//! ```
 
 /// Represents a DLsite site/subdomain.
 ///

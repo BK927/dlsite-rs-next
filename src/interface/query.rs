@@ -1,13 +1,27 @@
+//! Query parameter types for DLsite API requests.
+//!
+//! This module contains enums and types used to construct search queries
+//! and configure API request parameters.
+
 use strum::Display;
 
+/// Supported languages for DLsite content and API responses.
+///
+/// Used to specify the locale for product information and reviews.
+/// The default is [`Language::Jp`] (Japanese).
 #[derive(Display, Default, Clone, Debug, PartialEq)]
 #[strum(serialize_all = "snake_case")]
 pub enum Language {
+    /// Japanese (ja_JP)
     #[default]
     Jp,
+    /// English (en_US)
     En,
+    /// Korean (ko_KR)
     Ko,
+    /// Simplified Chinese (zh_CN)
     ZhCn,
+    /// Traditional Chinese (zh_TW)
     ZhTw,
 }
 
@@ -24,58 +38,76 @@ impl Language {
     }
 }
 
+/// Target audience sex category for search filtering.
 #[derive(Display)]
 #[strum(serialize_all = "snake_case")]
 pub enum SexCategory {
+    /// Male-targeted content.
     Male,
+    /// Female-targeted content.
     Female,
 }
 
-/// Flag to represent sales status
+/// Sales status filter for product searches.
 #[derive(Display)]
 #[strum(serialize_all = "snake_case")]
 pub enum AnaFlg {
+    /// Products not on sale.
     Off,
+    /// Products currently on sale.
     On,
+    /// Reserved/pre-order products.
     Reserve,
+    /// All products regardless of sale status.
     All,
 }
 
+/// Sort order for search results.
 #[derive(Display)]
 #[strum(serialize_all = "snake_case")]
 pub enum Order {
+    /// Trending/popular products.
     Trend,
-    /// 新しい
+    /// Newest releases first (新しい).
     Release,
-    /// 古い
+    /// Oldest releases first (古い).
     ReleaseD,
-    /// DL数が多い
+    /// Most downloads first (DL数が多い).
     DlD,
-    /// DL数が少ない
+    /// Fewest downloads first (DL数が少ない).
     Dl,
-    /// 安い
+    /// Lowest price first (安い).
     Price,
-    /// 高い
+    /// Highest price first (高い).
     PriceD,
-    /// 評価が高い
+    /// Highest rated first (評価が高い).
     RateD,
-    /// レビューが多い
+    /// Most reviews first (レビューが多い).
     ReviewD,
 }
 
+/// Logical operator for combining multiple filter options.
 #[derive(Display)]
 #[strum(serialize_all = "snake_case")]
 pub enum OptionAndOr {
+    /// Match all specified options (AND).
     And,
+    /// Match any specified option (OR).
     Or,
 }
 
+/// Release date range filter for searches.
 #[derive(Display)]
 pub enum ReleaseTerm {
+    /// No date filter.
     None,
+    /// Released within the last week.
     Week,
+    /// Released within the last month.
     Month,
+    /// Released within the last year.
     Year,
+    /// Older than one year.
     Old,
 }
 

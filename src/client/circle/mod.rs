@@ -1,6 +1,38 @@
-//! Interfaces related to circle only. For more information, see [`CircleClient`].
+//! Circle/maker functionality for DLsite.
+//!
+//! This module provides [`CircleClient`] for fetching information about
+//! circles (makers/creators) on DLsite, including their products and profile.
 //!
 //! **Note:** This entire module requires the `search-html` feature flag.
+//!
+//! # Enable the feature
+//!
+//! Add to your `Cargo.toml`:
+//! ```toml
+//! [dependencies]
+//! dlsite-rs = { version = "0.2", features = ["search-html"] }
+//! ```
+//!
+//! # Example
+//!
+//! ```ignore
+//! use dlsite_rs::DlsiteClient;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let client = DlsiteClient::default();
+//!
+//!     // Get circle profile
+//!     let profile = client.circle().get_circle_profile("RG24350").await.unwrap();
+//!     println!("Circle: {}", profile.name);
+//!
+//!     // List circle's games only
+//!     let games = client.circle().list_circle_games("RG24350").await.unwrap();
+//!     for game in games {
+//!         println!("{}: {}", game.id, game.title);
+//!     }
+//! }
+//! ```
 
 mod query;
 

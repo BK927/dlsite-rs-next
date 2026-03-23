@@ -1,6 +1,41 @@
-//! Interfaces related to search feature only. For more information, see [`SearchClient`].
+//! Product search functionality for DLsite.
+//!
+//! This module provides [`SearchClient`] for searching products on DLsite
+//! with support for filtering, sorting, and pagination.
 //!
 //! **Note:** This entire module requires the `search-html` feature flag.
+//!
+//! # Enable the feature
+//!
+//! Add to your `Cargo.toml`:
+//! ```toml
+//! [dependencies]
+//! dlsite-rs = { version = "0.2", features = ["search-html"] }
+//! ```
+//!
+//! # Basic Search
+//!
+//! ```ignore
+//! use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery};
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let client = DlsiteClient::default();
+//!     let query = SearchProductQuery {
+//!         keyword: Some("ASMR".to_string()),
+//!         ..Default::default()
+//!     };
+//!     let results = client.search().search_product(&query).await.unwrap();
+//!     println!("Found {} products", results.products.len());
+//! }
+//! ```
+//!
+//! # Performance Features
+//!
+//! - **Parallel parsing**: Large result sets are parsed using rayon for 3-4x speedup
+//! - **Result caching**: Parsed results are cached to avoid re-parsing
+//! - **Batch queries**: Fetch multiple pages concurrently
+//! - **Streaming API**: Process large result sets with callbacks
 
 pub(crate) mod macros;
 mod query;
@@ -35,40 +70,62 @@ pub struct SearchClient<'a> {
     result_cache: Arc<Mutex<GenericCache<Vec<SearchProductItem>>>>,
 }
 
+/// Internal response structure for search page metadata.
 #[derive(Deserialize)]
 struct SearchPageInfo {
     count: i32,
 }
 
+/// Internal response structure for AJAX search results.
 #[derive(Deserialize)]
 struct SearchAjaxResult {
     search_result: String,
     page_info: SearchPageInfo,
 }
 
+/// A single product in search results.
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct SearchProductItem {
+    /// Product ID (e.g., "RJ123456").
     pub id: String,
+    /// Product title.
     pub title: String,
+    /// Creator name, if different from circle name.
     pub creator: Option<String>,
+    /// Whether the creator name was truncated/omitted.
     pub creator_omitted: Option<bool>,
+    /// Circle/maker name.
     pub circle_name: String,
+    /// Circle/maker ID (e.g., "RG24350").
     pub circle_id: String,
+    /// Download count.
     pub dl_count: Option<i32>,
+    /// Rating count.
     pub rate_count: Option<i32>,
+    /// Review count.
     pub review_count: Option<i32>,
+    /// Original price in JPY.
     pub price_original: i32,
+    /// Sale price in JPY (if discounted).
     pub price_sale: Option<i32>,
+    /// Age category (General, R-15, Adult).
     pub age_category: AgeCategory,
+    /// Work type (RPG, ADV, SOU, etc.).
     pub work_type: WorkType,
+    /// Thumbnail image URL.
     pub thumbnail_url: String,
+    /// Average rating (0.0-5.0).
     pub rating: Option<f32>,
 }
 
+/// Search results from a query.
 #[derive(Debug)]
 pub struct SearchResult {
+    /// List of products matching the query.
     pub products: Vec<SearchProductItem>,
+    /// Total count of matching products.
     pub count: i32,
+    /// Query path used for the request.
     pub query_path: String,
 }
 
@@ -99,11 +156,11 @@ impl<'a> SearchClient<'a> {
     /// Search products on DLsite.
     ///
     /// # Arguments
-    /// * `options` - Struct of search options.
+    /// * `options` - Search query options.
     ///
     /// # Example
     /// ```ignore
-    /// use dlsite::{DlsiteClient, client::search::SearchProductQuery, interface::query::*};
+    /// use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::SexCategory};
     ///
     /// #[tokio::main]
     /// async fn main() {

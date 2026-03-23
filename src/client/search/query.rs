@@ -1,4 +1,23 @@
-//! Search options for dlsite product search
+//! Search query builder for DLsite product search.
+//!
+//! Use [`SearchProductQuery`] to construct search queries with various filters
+//! and options. All fields are optional and default to DLsite's default values.
+//!
+//! # Example
+//!
+//! ```ignore
+//! use dlsite_rs::{DlsiteClient, client::search::SearchProductQuery, interface::query::*};
+//!
+//! let query = SearchProductQuery {
+//!     keyword: Some("ASMR".to_string()),
+//!     sex_category: Some(vec![SexCategory::Male]),
+//!     order: Some(Order::Trend),
+//!     ..Default::default()
+//! };
+//!
+//! let client = DlsiteClient::default();
+//! let results = client.search().search_product(&query).await?;
+//! ```
 
 use crate::client::search::macros::*;
 use crate::interface::product::*;
@@ -38,46 +57,94 @@ use crate::interface::query::*;
 // /show_type/1
 // /from/fs.detail
 
-/// Struct to represent the search options for dlsite product search
+/// Search query parameters for DLsite product search.
+///
+/// All fields are optional. Use [`Default::default()`] to create a query with
+/// default values (Japanese language, no filters).
+///
+/// # Example
+///
+/// ```ignore
+/// use dlsite_rs::client::search::SearchProductQuery;
+/// use dlsite_rs::interface::query::{SexCategory, Order};
+///
+/// let query = SearchProductQuery {
+///     keyword: Some("ASMR".to_string()),
+///     sex_category: Some(vec![SexCategory::Male]),
+///     order: Some(Order::Trend),
+///     per_page: Some(50),
+///     ..Default::default()
+/// };
+/// ```
 #[derive(Default)]
 pub struct SearchProductQuery {
-    /// Display lang
+    /// Display language for the search interface.
     pub language: Language,
+    /// Filter by creator/circle name.
     pub keyword_creator: Option<String>,
+    /// Filter by target audience sex category (Male/Female).
     pub sex_category: Option<Vec<SexCategory>>,
+    /// Free-text keyword search.
     pub keyword: Option<String>,
+    /// End date for registration date filter (format: "YYYY-MM-DD").
     pub regist_date_end: Option<String>,
+    /// Start date for registration date filter (format: "YYYY-MM-DD").
     pub regist_date_start: Option<String>,
+    /// Minimum price filter (in JPY).
     pub price_low: Option<u32>,
+    /// Maximum price filter (in JPY).
     pub price_high: Option<u32>,
-    /// Sales status
+    /// Sales status filter (on sale, reserved, etc.).
     pub ana_flg: Option<AnaFlg>,
+    /// Age category filter (General, R-15, Adult).
     pub age_category: Option<Vec<AgeCategory>>,
+    /// Work category filter (Doujin, Books, PC, App).
     pub work_category: Option<Vec<WorkCategory>>,
+    /// Sort order for results.
     pub order: Option<Order>,
+    /// Individual work type filter (ACN, RPG, etc.).
     pub work_type: Option<Vec<WorkType>>,
+    /// Work type category filter (Game, Comic, Audio, etc.).
     pub work_type_category: Option<Vec<WorkTypeCategory>>,
+    /// Work type category display names (for URL construction).
     pub work_type_category_name: Option<Vec<String>>,
+    /// Genre IDs to filter by.
     pub genre: Option<Vec<u32>>,
+    /// Genre display names (for URL construction).
     pub genre_name: Option<Vec<String>>,
+    /// Logical operator for combining options (AND/OR).
     pub options_and_or: Option<OptionAndOr>,
+    /// Product options to include (e.g., "JPN" for Japanese language).
     pub options: Option<Vec<String>>,
+    /// Product options to exclude (e.g., "AIG" for AI-generated).
     pub options_not: Option<Vec<String>>,
+    /// Option display names (for URL construction).
     pub options_name: Option<Vec<String>>,
+    /// File type filter (EXE, PDF, MP3, etc.).
     pub file_type: Option<Vec<FileType>>,
+    /// Minimum average rating filter (1-5).
     pub rate_average: Option<u32>,
-    /// 30, 50 or 100
+    /// Number of results per page (30, 50, or 100).
     pub per_page: Option<u32>,
+    /// Page number for pagination (1-indexed).
     pub page: Option<u32>,
+    /// Filter to products in campaigns/sales.
     pub campaign: Option<bool>,
-    /// Whether the sales end date is in 24 hours
+    /// Filter to products with sale ending within 24 hours.
     pub soon: Option<bool>,
+    /// Filter to DLsite-exclusive products.
     pub dlsite_only: Option<bool>,
+    /// Filter to products currently offering bonus points.
     pub is_pointup: Option<bool>,
+    /// Filter to free products.
     pub is_free: Option<bool>,
+    /// Release date range filter.
     pub release_term: Option<ReleaseTerm>,
+    /// Price category filter.
     pub price_category: Option<u32>,
+    /// Show type filter.
     pub show_type: Option<u32>,
+    /// Referral source tracking parameter.
     pub from: Option<String>,
 }
 

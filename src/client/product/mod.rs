@@ -1,4 +1,37 @@
-//! Interfaces related to product only. For more information, see [`ProductClient`].
+//! Product client for fetching DLsite product data via multiple APIs.
+//!
+//! This module provides [`ProductClient`] for retrieving comprehensive product
+//! information by combining data from multiple DLsite API endpoints:
+//!
+//! - **AJAX API**: Basic info (title, price, ratings, sales count)
+//! - **Product API**: Detailed info (maker, genres, creators, images)
+//! - **Review API**: Reviewer demographics and reviews
+//!
+//! # Example
+//!
+//! ```no_run
+//! use dlsite_rs::DlsiteClient;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let client = DlsiteClient::default();
+//!
+//!     // Get comprehensive product info (combines all APIs)
+//!     let product = client.product().get_all("RJ123456").await.unwrap();
+//!     println!("{} by {}", product.title, product.circle_name.unwrap_or_default());
+//!
+//!     // Get just AJAX data (faster, less detail)
+//!     let ajax = client.product().get_ajax("RJ123456").await.unwrap();
+//!     println!("Price: {} JPY", ajax.price);
+//!
+//!     // Get reviews
+//!     use dlsite_rs::client::product::review::ReviewSortOrder;
+//!     let reviews = client.product()
+//!         .get_review("RJ123456", 10, 1, true, ReviewSortOrder::New)
+//!         .await
+//!         .unwrap();
+//! }
+//! ```
 
 use std::collections::HashMap;
 

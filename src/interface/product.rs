@@ -1,37 +1,44 @@
+//! Product-related types for DLsite works.
+//!
+//! This module contains enums representing work types, age categories,
+//! file types, and other product classification data.
+
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::DeserializeFromStr;
 use strum::{Display, EnumString};
 
-/// Work type (Group) (作品形式)
+/// Work type category (group) for broad classification.
 ///
-/// Used to represent several [`WorkType`]s together.
+/// Each category encompasses multiple individual [`WorkType`] values.
+/// Used for filtering search results by broad product type.
 #[derive(Debug, Display, Clone, PartialEq, EnumString, DeserializeFromStr)]
 #[strum(serialize_all = "snake_case")]
 pub enum WorkTypeCategory {
-    /// ゲーム
+    /// Games (ゲーム).
     Game,
-    /// マンガ
+    /// Manga/comics (マンガ).
     Comic,
-    /// CG・イラスト
+    /// CG and illustrations (CG・イラスト).
     Illust,
-    /// ノベル
+    /// Novels (ノベル).
     Novel,
-    /// 動画作品/アニメ
+    /// Video/animation works (動画作品/アニメ).
     Movie,
-    /// ボイス・ASMR
+    /// Voice and ASMR content (ボイス・ASMR).
     Audio,
-    /// 音楽
+    /// Music (音楽).
     Music,
-    /// ツール/アクセサリ
+    /// Tools and accessories (ツール/アクセサリ).
     Tool,
-    /// その他
+    /// Other/miscellaneous (その他).
     Etc,
 
+    /// Unknown or unrecognized work type category.
     #[strum(default)]
     Unknown(String),
 }
 
-/// Work type (Individual) (作品形式)
+/// Individual work type (作品形式) for fine-grained classification.
 #[derive(Display, EnumString, Debug, PartialEq, Clone, DeserializeFromStr, serde::Serialize)]
 pub enum WorkType {
     /// Game category
@@ -146,6 +153,15 @@ impl WorkType {
     /// Game work types include: Action (ACN), Quiz (QIZ), Adventure (ADV),
     /// RPG, Table (TBL), Digital Novel (DNV), Simulation (SLN),
     /// Typing (TYP), Shooting (STG), Puzzle (PZL), and Other Games (ETC).
+    ///
+    /// # Example
+    /// ```
+    /// use dlsite_rs::interface::product::WorkType;
+    ///
+    /// assert!(WorkType::RPG.is_game());
+    /// assert!(WorkType::ADV.is_game());
+    /// assert!(!WorkType::SOU.is_game()); // Voice/ASMR is not a game
+    /// ```
     pub fn is_game(&self) -> bool {
         matches!(
             self,
@@ -164,37 +180,41 @@ impl WorkType {
     }
 }
 
-/// Age category
+/// Age category/rating for DLsite products.
 #[derive(Display, Debug, Clone, PartialEq, Deserialize_repr, Serialize_repr)]
 #[repr(u16)]
 #[strum(serialize_all = "snake_case")]
 pub enum AgeCategory {
+    /// All ages (全年齢).
     #[serde(with = "i8")]
     General = 1,
+    /// R-15 rated content.
     #[serde(with = "i8")]
     R15 = 2,
+    /// Adult only (18+).
     #[serde(with = "i8")]
     Adult = 3,
 }
 
-/// Work category (parent category)
+/// Work category (parent category) for market segmentation.
 #[derive(Display, EnumString, PartialEq, DeserializeFromStr, Debug, Clone)]
 #[strum(serialize_all = "snake_case")]
 pub enum WorkCategory {
-    /// 同人
+    /// Doujin/fan works (同人).
     Doujin,
-    /// Adult: 成年コミック
+    /// Commercial books/manga (成年コミック).
     Books,
-    /// Adult: 美少女ゲーム, General: PCソフト
+    /// PC software: Adult games (美少女ゲーム) or general software (PCソフト).
     Pc,
-    /// スマホゲーム
+    /// Mobile/smartphone games (スマホゲーム).
     App,
 
+    /// Unknown or unrecognized work category.
     #[strum(default)]
     Unknown(String),
 }
 
-/// File type
+/// File type/extension for downloadable content.
 #[derive(Display, EnumString, PartialEq, Debug, Clone, DeserializeFromStr)]
 pub enum FileType {
     EXE,

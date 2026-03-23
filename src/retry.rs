@@ -1,3 +1,25 @@
+//! Retry configuration for HTTP requests.
+//!
+//! This module provides [`RetryConfig`] for configuring automatic retry behavior
+//! when HTTP requests fail due to transient errors.
+//!
+//! # Default Configuration
+//!
+//! - Maximum retries: 3
+//! - Initial delay: 100ms
+//! - Maximum delay: 10 seconds
+//! - Backoff multiplier: 2.0 (exponential backoff)
+//!
+//! # Retryable Errors
+//!
+//! The following errors are automatically retried:
+//! - Timeouts
+//! - Rate limit (HTTP 429)
+//! - Server errors (HTTP 5xx)
+//!
+//! Non-retryable errors include authentication failures, client errors (4xx),
+//! and schema drift detection.
+
 use crate::error::DlsiteError;
 use std::time::Duration;
 

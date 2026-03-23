@@ -1,4 +1,32 @@
-//! Interfaces related to product api only. For more information, see [`ProductApiClient`].
+//! Product API client for fetching DLsite product data via JSON API.
+//!
+//! This module provides [`ProductApiClient`] for retrieving detailed product
+//! information from DLsite's JSON API endpoints.
+//!
+//! # Example
+//!
+//! ```no_run
+//! use dlsite_rs::DlsiteClient;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let client = DlsiteClient::default();
+//!
+//!     // Get product details
+//!     let product = client.product_api().get("RJ123456").await.unwrap();
+//!     println!("Product: {}", product.work_name);
+//!
+//!     // Get thumbnail URL
+//!     let thumbnail = client.product_api().get_product_thumbnail("RJ123456").await.unwrap();
+//!     println!("Thumbnail: {}", thumbnail);
+//!
+//!     // Get screenshot URLs
+//!     let screenshots = client.product_api().list_product_screenshots("RJ123456").await.unwrap();
+//!     for url in screenshots {
+//!         println!("Screenshot: {}", url);
+//!     }
+//! }
+//! ```
 
 pub mod interface;
 

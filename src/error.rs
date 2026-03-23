@@ -1,6 +1,18 @@
+//! Error types for the DLsite client.
+//!
+//! This module provides the [`DlsiteError`] enum which represents all possible
+//! errors that can occur when interacting with the DLsite API.
+//!
+//! # Error Categories
+//!
+//! - **Network errors**: HTTP request failures, timeouts
+//! - **API errors**: Rate limiting, authentication required, HTTP status errors
+//! - **Parsing errors**: Invalid JSON/HTML responses, schema drift detection
+//! - **Feature errors**: Attempting to use feature-gated functionality
+
 use thiserror::Error;
 
-/// Errors that can occur while using the Dlsite API
+/// Errors that can occur while using the Dlsite API.
 #[non_exhaustive]
 #[derive(Debug, Error)]
 pub enum DlsiteError {

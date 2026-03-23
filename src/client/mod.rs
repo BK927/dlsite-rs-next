@@ -1,3 +1,35 @@
+//! DLsite API client and sub-clients.
+//!
+//! This module provides [`DlsiteClient`] for interacting with DLsite APIs,
+//! along with specialized sub-clients for different functionality areas.
+//!
+//! # Sub-clients
+//!
+//! | Client | Method | Description | Feature Flag |
+//! |--------|--------|-------------|--------------|
+//! | [`product::ProductClient`] | [`product()`](DlsiteClient::product) | Product info via HTML scraping | - |
+//! | [`product_api::ProductApiClient`] | [`product_api()`](DlsiteClient::product_api) | Product info via JSON API | - |
+//! | [`search::SearchClient`] | [`search()`](DlsiteClient::search) | Product search | `search-html` |
+//! | [`circle::CircleClient`] | [`circle()`](DlsiteClient::circle) | Circle/maker info | `search-html` |
+//! | [`ranking::RankingClient`] | [`ranking()`](DlsiteClient::ranking) | Rankings (stub) | - |
+//!
+//! # Example
+//!
+//! ```no_run
+//! use dlsite_rs::DlsiteClient;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let client = DlsiteClient::default();
+//!
+//!     // Get product info via JSON API
+//!     let product = client.product_api().get("RJ123456").await?;
+//!     println!("Product: {}", product.work_name);
+//!
+//!     Ok(())
+//! }
+//! ```
+
 use crate::cache::ResponseCache;
 use crate::error::{DlsiteError, Result};
 use crate::interface::query::Language;

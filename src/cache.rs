@@ -1,3 +1,20 @@
+//! Response caching utilities for the DLsite client.
+//!
+//! This module provides thread-safe LRU caches used internally by [`DlsiteClient`]
+//! to cache HTTP responses and parsed results.
+//!
+//! # Cache Types
+//!
+//! - [`ResponseCache`]: Caches raw HTTP response strings
+//! - [`GenericCache`]: Caches any cloneable type (used for parsed search results)
+//!
+//! Both caches support:
+//! - Configurable capacity (maximum entries)
+//! - Time-to-live (TTL) expiration
+//! - Thread-safe access via `Arc<Mutex<...>>`
+//!
+//! [`DlsiteClient`]: crate::DlsiteClient
+
 use lru::LruCache;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
